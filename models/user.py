@@ -13,7 +13,7 @@ class User(db.Model):
 
 class UserSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'name', 'email', 'password', 'is_admin')
+        fields = ('id', 'username', 'email', 'password', 'is_admin')
 
 
 user_schema = UserSchema(exclude=['password'])
