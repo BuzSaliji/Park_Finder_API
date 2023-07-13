@@ -46,7 +46,7 @@ def add_city():
 # Route to delete city
 
 
-@city_bp.route('/city/<id>', methods=['DELETE'])
+@city_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 def delete_city(id):
     stmt = db.select(City).filter_by(id=id)
@@ -54,6 +54,6 @@ def delete_city(id):
     if city:
         db.session.delete(city)
         db.session.commit()
-        return {'message': f'City {city.city_name} deleted successfully'}
+        return {'message': f'City {city.city_name} deleted successfully'}, 200
     else:
         return {'error': f'City not found with id {id}'}, 404

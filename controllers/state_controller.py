@@ -14,9 +14,9 @@ def get_all_states(id):
     return state_schema.dump(state)
 
 
-@state_bp.route('/int:id>')
-def get_city(id):
-    stmt = db.select(State).filter_byt(id=id)
+@state_bp.route('/<int:id>')
+def get_state(id):
+    stmt = db.select(State).filter_by(id=id)
     state = db.session.scalar(stmt)
     if state:
         return state_schema.dump(state)
@@ -24,7 +24,7 @@ def get_city(id):
         return {'error': f'State not found with id {id}'}, 404
 
 
-@state_bp.route('/state', methods=['POST'])
+@state_bp.route('/', methods=['POST'])
 @jwt_required()
 def add_state():
     body_data = request.get_json()
@@ -39,7 +39,7 @@ def add_state():
     return state_schema.dump(state), 201
 
 
-@state_bp.route('/state/<id>', methods=['DELETE'])
+@state_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 def delete_state(id):
     stmt = db.select(State).filter_by(id=id)
@@ -47,6 +47,6 @@ def delete_state(id):
     if state:
         db.session.delete(state)
         db.session.commit()
-        return {'message': f'Card {state.state_name} deleted successfully'}
+        return {'message': f'State {state.state_name} deleted successfully'}, 200
     else:
         return {'error': f'State not found with id {id}'}, 404
