@@ -4,6 +4,7 @@ from init import db, ma, bcrypt, jwt
 from controllers.cli_controller import db_commands
 from controllers.auth_controller import auth_bp
 from controllers.city_controller import city_bp
+from controllers.state_controller import state_bp
 
 
 def create_app():
@@ -21,5 +22,6 @@ def create_app():
     app.register_blueprint(db_commands)
     app.register_blueprint(auth_bp)
     app.register_blueprint(city_bp)
+    app.register_blueprint(state_bp)
 
     return app
