@@ -3,46 +3,57 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.city import City, city_schema, cities_schema
 from init import db
 
-city_bp = Blueprint('city_bp', __name__)
+city_bp = Blueprint('city_bp', __name__, url_prefix='/city')
 
 # Route to get all cities
 
 
-@city_bp.route('/cities', methods=['GET'])
-@jwt_required()
-def get_all_cities():
-    all_cities = City.query.all()
-    result = cities_schema.dump(all_cities)
-    return jsonify(result)
+@city_bp.route('/')
+def get_all_city():
+    stmt = db.select(City)
+    city = db.session.scalar(stmt)
+    return city_schema.dump(city)
 
+
+@city_bp.route('/<int:id>')
+def get_city(id):
+    stmt = db.select(City).filter_by(id=id)
+    city = db.session.scalars(stmt)
+    if city:
+        return city_schema.dump(city)
+    else:
+        return {'error': f'City not found with id {id}'}, 404
 
 # Route to add new city
-@city_bp.route('/city', methods=['POST'])
+
+
+@city_bp.route('/', methods=['POST'])
 @jwt_required()
 def add_city():
-    data = request.get_json()  # This is where the data from the POST request is coming from
+    body_data = request.get_json()
+    # Create a new City model instance
+    city = City(
+        city_name=body_data.get('city_name'),
+        state_id=body_data.get('state_id')
+    )
 
-    new_city = City(city_name=data['city_name'], state_id=data['state_id'])
-    db.session.add(new_city)
+    # Add that city to the session
+    db.session.add(city)
+    # Commit
     db.session.commit()
-
-    return city_schema.dump(new_city), 201
-
+    # Respond to he client
+    return city_schema.dump(city), 201
 # Route to delete city
 
 
 @city_bp.route('/city/<id>', methods=['DELETE'])
 @jwt_required()
 def delete_city(id):
-    current_user = current_identity
-    if current_user.is_admin:
-        city = City.query.get(id)
-        if city is None:
-            return jsonify({"error": "City not found"}), 404
-
+    stmt = db.select(City).filter_by(id=id)
+    city = db.session.scalar(stmt)
+    if city:
         db.session.delete(city)
         db.session.commit()
-
-        return city_schema.jsonify(city)
+        return {'message': f'City {city.city_name} deleted successfully'}
     else:
-        return jsonify({"error": "Permission denied"}), 403
+        return {'error': f'City not found with id {id}'}, 404
