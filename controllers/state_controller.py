@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.state import State, state_schema, states_schema
 from init import db
@@ -6,7 +6,7 @@ from init import db
 state_bp = Blueprint('state_bp', __name__, url_prefix='/state')
 
 
-@state_bp.route('/<int:id>')
+@state_bp.route('/')
 def get_all_states(id):
     stmt = db.select(State)
     state = db.session.scalars(stmt)
