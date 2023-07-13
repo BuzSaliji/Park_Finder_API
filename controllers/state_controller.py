@@ -7,17 +7,14 @@ state_bp = Blueprint('state_bp', __name__, url_prefix='/state')
 
 
 @state_bp.route('/')
-def get_all_states(id):
-    stmt = db.select(State)
-    state = db.session.scalars(stmt)
-
-    return state_schema.dump(state)
+def get_all_states():
+    states = State.query.all()
+    return states_schema.dump(states)
 
 
 @state_bp.route('/<int:id>')
 def get_state(id):
-    stmt = db.select(State).filter_by(id=id)
-    state = db.session.scalar(stmt)
+    state = State.query.get(id)
     if state:
         return state_schema.dump(state)
     else:
@@ -28,7 +25,6 @@ def get_state(id):
 @jwt_required()
 def add_state():
     body_data = request.get_json()
-
     state = State(
         state_name=body_data.get('state_name')
     )

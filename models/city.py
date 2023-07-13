@@ -15,11 +15,12 @@ class City(db.Model):
 
 
 class CitySchema(ma.Schema):
-    state = fields.Nested('StateSchema', exclude=('cities',))
-    addresses = fields.Nested('AddressSchema', exclude=('city',), many=True)
+    state = fields.Nested('StateSchema', exclude=['cities'])
+    addresses = fields.Nested('AddressSchema', exclude=['city'], many=True)
 
     class Meta:
         fields = ('id', 'city_name', 'state')
+        ordered = True
 
 
 city_schema = CitySchema()

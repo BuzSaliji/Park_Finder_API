@@ -12,10 +12,11 @@ class State(db.Model):
 
 
 class StateSchema(ma.Schema):
-    cities = fields.Nested('CitySchema', many=True, exclude=('state',))
+    cities = fields.Nested('CitySchema', many=True, exclude=['state'])
 
     class Meta:
-        fields = ('id', 'state_name',)
+        fields = ('id', 'state_name', 'cities')
+        ordered = True
 
 
 state_schema = StateSchema()

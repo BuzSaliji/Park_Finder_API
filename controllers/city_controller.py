@@ -10,15 +10,13 @@ city_bp = Blueprint('city_bp', __name__, url_prefix='/city')
 
 @city_bp.route('/')
 def get_all_city():
-    stmt = db.select(City)
-    city = db.session.scalar(stmt)
-    return city_schema.dump(city)
+    cities = City.query.all()
+    return cities_schema.dump(cities)
 
 
 @city_bp.route('/<int:id>')
 def get_city(id):
-    stmt = db.select(City).filter_by(id=id)
-    city = db.session.scalars(stmt)
+    city = City.query.get(id)
     if city:
         return city_schema.dump(city)
     else:

@@ -13,10 +13,11 @@ class Address(db.Model):
 
 
 class AddressSchema(ma.Schema):
-    city = fields.Nested('CitySchema', exclude=('cities',))
+    city = fields.Nested('CitySchema', exclude=['cities'])
 
     class Meta:
         fields = ('id', 'address', 'city_id')
+        ordered = True
 
 
 address_schema = AddressSchema()

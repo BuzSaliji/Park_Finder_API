@@ -17,11 +17,12 @@ class Park(db.Model):
 
 
 class ParkSchema(ma.Schema):
-    address = fields.Nested('AddressSchema', exclude=('addresses',))
-    user = fields.Nested('UserSchema', exclude=('users',))
+    address = fields.Nested('AddressSchema', exclude=['addresses'])
+    user = fields.Nested('UserSchema', exclude=['users'])
 
     class Meta:
         fields = ('id', 'park_name', 'description', 'address_id', 'user_id')
+        ordered = True
 
 
 park_schema = ParkSchema()
