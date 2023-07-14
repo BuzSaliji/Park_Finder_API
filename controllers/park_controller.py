@@ -1,7 +1,6 @@
 from flask import Blueprint, request
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import SQLAlchemyError
 from models.park import Park, park_schema, parks_schema
 from models.address import Address, address_schema
