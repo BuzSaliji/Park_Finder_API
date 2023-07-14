@@ -74,3 +74,19 @@ def delete_park(id):
         return {'message': f'park {park.park_name} deleted successfully'}, 200
     else:
         return {'error': f'park not found with id {id}'}, 404
+
+
+@park_bp.route('/int:id', methods=['PUT', 'PATCH'])
+@jwt_required()
+@authorise_as_admin
+def update_one_park(id):
+    body_data = park_schema.load(request.get_json(), partial=True)
+    stmt = db.select(Park).filter_by(id=id)
+    park = db.session.scalar(stmt)
+    if park:
+        park.name = body_data.get('park_name') or park.name
+        park.description = body_data.get('description') or park.description
+        db.session.commit()
+        return park_schema.dump(park)
+    else:
+        return {'error': f'Park not found with id {id}'}, 404
