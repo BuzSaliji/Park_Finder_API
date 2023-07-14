@@ -26,13 +26,17 @@ def authorise_as_admin(fn):
 
 @city_bp.route('/')
 def get_all_city():
-    cities = City.query.all()
+    stmt = db.select(City)
+    cities = db.session.scalars(stmt)
     return cities_schema.dump(cities)
+
+# Route to a single City
 
 
 @city_bp.route('/<int:id>')
 def get_city(id):
-    city = City.query.get(id)
+    stmt = db.select(City).filter_by(id=id)
+    city = db.session.scalar(stmt)
     if city:
         return city_schema.dump(city)
     else:

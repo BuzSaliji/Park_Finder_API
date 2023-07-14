@@ -21,20 +21,28 @@ def authorise_as_admin(fn):
 
     return wrapper
 
+# Route to all States
+
 
 @state_bp.route('/')
 def get_all_states():
-    states = State.query.all()
+    stmt = db.select(State)
+    states = db.session.scalars(stmt)
     return states_schema.dump(states)
+
+# Route to a single State
 
 
 @state_bp.route('/<int:id>')
 def get_state(id):
-    state = State.query.get(id)
+    stmt = db.select(State).filter_by(id=id)
+    state = db.session.scalar(stmt)
     if state:
         return state_schema.dump(state)
     else:
         return {'error': f'State not found with id {id}'}, 404
+
+# Route to create a State
 
 
 @state_bp.route('/', methods=['POST'])
@@ -50,6 +58,8 @@ def add_state():
     db.session.commit()
 
     return state_schema.dump(state), 201
+
+# Route to delete a state
 
 
 @state_bp.route('/<int:id>', methods=['DELETE'])

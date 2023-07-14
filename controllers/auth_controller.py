@@ -8,6 +8,8 @@ from datetime import timedelta
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
+# Route to register a user
+
 
 @auth_bp.route('/register', methods=['POST'])
 def auth_register():
@@ -32,6 +34,8 @@ def auth_register():
             return {'error': 'Email address already in use'}, 401
         if err.orig.pgcode == errorcodes.NOT_NULL_VIOLATION:
             return {'error': f'the {err.orig.diag.column_name} is required'}, 409
+
+# Route to login as a user
 
 
 @auth_bp.route('/login', methods=['POST'])

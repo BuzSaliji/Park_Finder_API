@@ -17,7 +17,7 @@ class SuburbSchema(ma.Schema):
     city = fields.Nested('CitySchema', exclude=['cities'])
 
     class Meta:
-        fields = ('id', 'suburb', 'city_id')
+        fields = ('id', 'suburb_name', 'city_id')
         ordered = True
 
 

@@ -26,13 +26,17 @@ def authorise_as_admin(fn):
 
 @suburb_bp.route('/')
 def get_all_suburbs():
-    suburbs = Suburb.query.all()
+    stmt = db.select(Suburb)
+    suburbs = db.session.scalars(stmt)
     return suburbs_schema.dump(suburbs)
+
+# Route to a single suburb
 
 
 @suburb_bp.route('/<int:id>')
 def get_suburb(id):
-    suburb = Suburb.query.get(id)
+    stmt = db.select(Suburb).filter_by(id=id)
+    suburb = db.session.scalar(stmt)
     if suburb:
         return suburb_schema.dump(suburb)
     else:

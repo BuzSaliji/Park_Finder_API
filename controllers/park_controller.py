@@ -27,13 +27,17 @@ def authorise_as_admin(fn):
 
 @park_bp.route('/')
 def get_all_parks():
-    parks = Park.query.all()
+    stmt = db.select(Park)
+    parks = db.session.scalars(stmt)
     return parks_schema.dump(parks)
+
+# Route to a single Park
 
 
 @park_bp.route('/<int:id>')
 def get_park(id):
-    park = Park.query.get(id)
+    stmt = db.select(Park).filter_by(id=id)
+    park = db.session.scalar(stmt)
     if park:
         return park_schema.dump(park)
     else:
@@ -60,6 +64,8 @@ def add_park():
 
     return {'message': f'Park {new_park.park_name} created successfully'}, 201
 
+# Route to delete a Park
+
 
 @park_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
@@ -74,6 +80,8 @@ def delete_park(id):
         return {'message': f'park {park.park_name} deleted successfully'}, 200
     else:
         return {'error': f'park not found with id {id}'}, 404
+
+# Route to update a Park
 
 
 @park_bp.route('/int:id', methods=['PUT', 'PATCH'])

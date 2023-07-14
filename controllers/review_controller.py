@@ -12,7 +12,8 @@ review_bp = Blueprint('review_bp', __name__, url_prefix='/review')
 # Route to all reviews
 @review_bp.route('/')
 def get_all_reviews():
-    reviews = Review.query.all()
+    stmt = db.select(Review)
+    reviews = db.session.scalars(stmt)
     return review_schema.dump(reviews)
 
 # Route to a single review
@@ -20,7 +21,8 @@ def get_all_reviews():
 
 @review_bp.route('/<int:id>')
 def get_review(id):
-    review = Review.query.get(id)
+    stmt = db.select(Review).filter_by(id=id)
+    review = db.session.scalar(stmt)
     if review:
         return review_schema.dump(review)
     else:
@@ -36,7 +38,7 @@ def add_review():
     # Create new review model instance
     new_review = Review(
         user_id=body_data.get('user_id'),
-        park_id=body_data.get('par_id'),
+        park_id=body_data.get('park_id'),
         rating=body_data.get('rating'),
         comment=body_data.get('comment')
     )
@@ -57,6 +59,8 @@ def delete_review(id):
         return {'message': f'review {review.review} deleted successfully'}, 200
     else:
         return {'error': f'review not found with id {id}'}, 404
+
+# Route to update a review
 
 
 @review_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
