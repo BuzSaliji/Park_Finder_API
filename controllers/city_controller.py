@@ -1,9 +1,25 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.city import City, city_schema, cities_schema
+from models.user import User
 from init import db
+import functools
 
 city_bp = Blueprint('city_bp', __name__, url_prefix='/city')
+
+
+def authorise_as_admin(fn):
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        user_id = get_jwt_identity()
+        stmt = db.select(User).filter_by(id=user_id)
+        user = db.session.scalar(stmt)
+        if user.is_admin:
+            return fn(*args, **kwargs)
+        else:
+            return {'error': 'Not authorised to perform delete'}, 403
+
+    return wrapper
 
 # Route to get all cities
 
@@ -46,6 +62,7 @@ def add_city():
 
 @city_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
+@authorise_as_admin
 def delete_city(id):
     stmt = db.select(City).filter_by(id=id)
     city = db.session.scalar(stmt)

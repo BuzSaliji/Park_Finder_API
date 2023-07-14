@@ -1,24 +1,38 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.address import Address, address_schema, addresses_schema
+from models.user import User
 from init import db
+import functools
 
 address_bp = Blueprint('address_bp', __name__, url_prefix='/address')
+
+
+def authorise_as_admin(fn):
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        user_id = get_jwt_identity()
+        stmt = db.select(User).filter_by(id=user_id)
+        user = db.session.scalar(stmt)
+        if user.is_admin:
+            return fn(*args, **kwargs)
+        else:
+            return {'error': 'Not authorised to perform delete'}, 403
+
+    return wrapper
 
 # Route to all address
 
 
 @address_bp.route('/')
 def get_all_address():
-    stmt = db.select(Address)
-    address = db.session.scalars(stmt)
-    return address_schema.dump(address)
+    addresses = Address.query.all()
+    return addresses_schema.dump(addresses)
 
 
 @address_bp.route('/<int:id>')
 def get_address(id):
-    stmt = db.select(Address).filter_by(id=id)
-    address = db.session.scalars(stmt)
+    address = Address.query.get(id)
     if address:
         return address_schema.dump(address)
     else:
@@ -47,6 +61,7 @@ def add_address():
 
 @address_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
+@authorise_as_admin
 def delete_address(id):
     stmt = db.select(address).filter_by(id=id)
     address = db.session.execute(stmt).scalars().one_or_none()

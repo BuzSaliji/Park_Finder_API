@@ -5,24 +5,38 @@ from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import SQLAlchemyError
 from models.park import Park, park_schema, parks_schema
 from models.address import Address, address_schema
+from models.user import User
 from init import db
+import functools
 
 park_bp = Blueprint('park_bp', __name__, url_prefix='/park')
+
+
+def authorise_as_admin(fn):
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        user_id = get_jwt_identity()
+        stmt = db.select(User).filter_by(id=user_id)
+        user = db.session.scalar(stmt)
+        if user.is_admin:
+            return fn(*args, **kwargs)
+        else:
+            return {'error': 'Not authorised to perform delete'}, 403
+
+    return wrapper
 
 # Route to all Parks
 
 
 @park_bp.route('/')
 def get_all_parks():
-    stmt = db.select(Park)
-    park = db.session.scalars(stmt)
-    return park_schema.dump(park)
+    parks = Park.query.all()
+    return parks_schema.dump(parks)
 
 
 @park_bp.route('/<int:id>')
 def get_park(id):
-    stmt = db.select(Park).filter_by(id=id)
-    park = db.session.scalars(stmt)
+    park = Park.query.get(id)
     if park:
         return park_schema.dump(park)
     else:
@@ -59,12 +73,14 @@ def add_park():
 
 @park_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
+@authorise_as_admin
 def delete_park(id):
-    stmt = db.select(park).filter_by(id=id)
+    stmt = db.select(Park).filter_by(id=id)
     park = db.session.execute(stmt).scalars().one_or_none()
     if park:
         db.session.delete(park)
         db.session.commit()
-        return {'message': f'park {park.park} deleted successfully'}, 200
+        # Assuming 'name' is an attribute of park
+        return {'message': f'park {park.park_name} deleted successfully'}, 200
     else:
         return {'error': f'park not found with id {id}'}, 404
