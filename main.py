@@ -5,7 +5,7 @@ from controllers.cli_controller import db_commands
 from controllers.auth_controller import auth_bp
 from controllers.city_controller import city_bp
 from controllers.state_controller import state_bp
-from controllers.address_controller import address_bp
+from controllers.suburb_controller import suburb_bp
 from controllers.park_controller import park_bp
 from controllers.review_controller import review_bp
 
@@ -28,7 +28,7 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(city_bp)
     app.register_blueprint(state_bp)
-    app.register_blueprint(address_bp)
+    app.register_blueprint(suburb_bp)
     app.register_blueprint(park_bp)
     app.register_blueprint(review_bp)
 

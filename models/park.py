@@ -9,21 +9,22 @@ class Park(db.Model):
     park_name = db.Column(db.String(50), nullable=False)
     description = db.Column(db.String(500), nullable=False)
     address = db.Column(db.String(250), nullable=False)
-    address_id = db.Column(db.Integer, db.ForeignKey(
-        'address.id'), nullable=False)
+    suburb_id = db.Column(db.Integer, db.ForeignKey(
+        'suburb.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
-    address = db.relationship('Address', back_populates='parks')
+    suburb = db.relationship('Suburb', back_populates='parks')
     user = db.relationship('User', back_populates='parks')
     reviews = db.relationship('Review', back_populates='park')
 
 
 class ParkSchema(ma.Schema):
-    address = fields.Nested('AddressSchema', exclude=['addresses'])
+    suburb = fields.Nested('suburbSchema', exclude=['suburbs'])
     user = fields.Nested('UserSchema', exclude=['users'])
 
     class Meta:
-        fields = ('id', 'park_name', 'description', 'address_id', 'user_id')
+        fields = ('id', 'park_name',  'description',
+                  'address', 'suburb_id', 'user_id')
         ordered = True
 
 

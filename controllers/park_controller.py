@@ -2,7 +2,6 @@ from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import SQLAlchemyError
 from models.park import Park, park_schema, parks_schema
-from models.address import Address, address_schema
 from models.user import User
 from init import db
 import functools
@@ -45,24 +44,17 @@ def get_park(id):
 
 @park_bp.route('/park', methods=['POST'])
 @jwt_required()
+@authorise_as_admin
 def add_park():
-    data = request.get_json()
-
-    # create a new address object
-    new_address = Address(
-        address=data['address'],
-        city_id=data['city_id'],
-    )
-    db.session.add(new_address)
-    db.session.flush()  # This assigns an id to the new address object
-
-    # create a new park object
+    body_data = request.get_json()
     new_park = Park(
-        park_name=data['park_name'],
-        description=data['description'],
-        address_id=new_address.id,  # use the id of the just-created address
-        user_id=data['user_id']
+        park_name=body_data.get('park_name'),
+        description=body_data.get('description'),
+        address=body_data.get('address'),
+        suburb_id=body_data.get('suburb_id'),
+        user_id=body_data.get('user_id')
     )
+
     db.session.add(new_park)
     db.session.commit()
 
@@ -78,7 +70,7 @@ def delete_park(id):
     if park:
         db.session.delete(park)
         db.session.commit()
-        # Assuming 'name' is an attribute of park
+
         return {'message': f'park {park.park_name} deleted successfully'}, 200
     else:
         return {'error': f'park not found with id {id}'}, 404

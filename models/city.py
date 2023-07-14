@@ -11,12 +11,12 @@ class City(db.Model):
     state_id = db.Column(db.Integer, db.ForeignKey('state.id'), nullable=False)
 
     state = db.relationship('State', back_populates='cities')
-    addresses = db.relationship('Address', back_populates='city')
+    suburbs = db.relationship('Suburb', back_populates='city')
 
 
 class CitySchema(ma.Schema):
     state = fields.Nested('StateSchema', exclude=['cities'])
-    addresses = fields.Nested('AddressSchema', exclude=['city'], many=True)
+    suburbs = fields.Nested('SuburbSchema', exclude=['city'], many=True)
 
     class Meta:
         fields = ('id', 'city_name', 'state')
