@@ -3,6 +3,9 @@ from init import db, bcrypt
 from models.user import User
 from models.state import State
 from models.city import City
+from models.address import Address
+from models.park import Park
+from models.review import Review
 
 db_commands = Blueprint('db', __name__)
 

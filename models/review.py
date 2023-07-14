@@ -13,6 +13,9 @@ class Review(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey(
         'users.id'), primary_key=True)
 
+    user = db.relationship('User', back_populates='reviews')
+    park = db.relationship('Park', back_populates='reviews')
+
     __table_args__ = (
         CheckConstraint('rating >= 1 AND rating <= 10', name='rating_range'),
     )

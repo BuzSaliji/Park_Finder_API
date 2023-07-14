@@ -29,9 +29,9 @@ def get_review(id):
 # Route to new review
 
 
-@review_bp.route('/<int:>id', methods=['POST'])
+@review_bp.route('/', methods=['POST'])
 @jwt_required()
-def add_review(id):
+def add_review():
     body_data = request.get_json()
     # Create new review model instance
     new_review = Review(

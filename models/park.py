@@ -15,6 +15,7 @@ class Park(db.Model):
 
     address = db.relationship('Address', back_populates='parks')
     user = db.relationship('User', back_populates='parks')
+    reviews = db.relationship('Review', back_populates='park')
 
 
 class ParkSchema(ma.Schema):

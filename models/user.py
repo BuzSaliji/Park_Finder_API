@@ -12,6 +12,7 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
 
     parks = db.relationship('Park', back_populates='user')
+    reviews = db.relationship('Review', back_populates='user')
 
 
 class UserSchema(ma.Schema):
