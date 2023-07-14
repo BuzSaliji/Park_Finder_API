@@ -13,20 +13,24 @@ review_bp = Blueprint('review_bp', __name__, url_prefix='/review')
 @review_bp.route('/')
 def get_all_reviews():
     stmt = db.select(Review)
-    reviews = db.session.scalars(stmt)
-    return review_schema.dump(reviews)
+    result = db.session.execute(stmt)
+    reviews = result.scalars().all()
+    return {"reviews": [review_schema.dump(review) for review in reviews]}
+
 
 # Route to a single review
 
 
-@review_bp.route('/<int:id>')
-def get_review(id):
-    stmt = db.select(Review).filter_by(id=id)
+@review_bp.route('/<int:user_id>/<int:park_id>')
+def get_review(user_id, park_id):
+    stmt = db.select(Review).where(
+        (Review.user_id == user_id) & (Review.park_id == park_id))
     review = db.session.scalar(stmt)
     if review:
         return review_schema.dump(review)
     else:
-        return {'error': f'review not found with id {id}'}, 404
+        return {'error': f'Review not found for user_id {user_id} and park_id {park_id}'}, 404
+
 
 # Route to new review
 
@@ -49,16 +53,18 @@ def add_review():
 # Delete a review
 
 
-@review_bp.route('/<int:id>', methods=['DELETE'])
-def delete_review(id):
-    stmt = db.select(review).filter_by(id=id)
+@review_bp.route('/<int:user_id>/<int:park_id>', methods=['DELETE'])
+def delete_review(user_id, park_id):
+    stmt = db.select(Review).where(
+        (Review.user_id == user_id) & (Review.park_id == park_id))
     review = db.session.execute(stmt).scalars().one_or_none()
     if review:
         db.session.delete(review)
         db.session.commit()
-        return {'message': f'review {review.review} deleted successfully'}, 200
+        return {'message': f'Review for user_id {user_id} and park_id {park_id} deleted successfully'}, 200
     else:
-        return {'error': f'review not found with id {id}'}, 404
+        return {'error': f'Review not found for user_id {user_id} and park_id {park_id}'}, 404
+
 
 # Route to update a review
 
