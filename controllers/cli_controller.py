@@ -72,4 +72,4 @@ def seed_db():
     db.session.add_all(cities)
     db.session.commit()
 
-    print("Tables seeded")
+    print("Tables Seeded")

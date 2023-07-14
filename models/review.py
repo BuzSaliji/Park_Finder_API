@@ -9,7 +9,7 @@ class Review(db.Model):
     comment = db.Column(db.String(250))
     rating = db.Column(db.Integer)
     park_id = db.Column(db.Integer, db.ForeignKey(
-        'parks.id'), primary_key=True)
+        'park.id'), primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey(
         'users.id'), primary_key=True)
 
@@ -22,8 +22,9 @@ class Review(db.Model):
 
 
 class ReviewSchema(ma.Schema):
-    fields = ('comment', 'rating', 'park_id', 'user_id')
-    ordered = True
+    class Meta:
+        fields = ('comment', 'rating', 'park_id', 'user_id')
+        ordered = True
 
 
 review_schema = ReviewSchema()
