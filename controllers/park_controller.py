@@ -1,9 +1,14 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
+from sqlalchemy.exc import SQLAlchemyError
 from models.park import Park, park_schema, parks_schema
+from models.address import Address, address_schema
 from init import db
 
 park_bp = Blueprint('park_bp', __name__, url_prefix='/park')
+
 # Route to all Parks
 
 
@@ -26,27 +31,33 @@ def get_park(id):
 # Route to new park
 
 
-@park_bp.route('/', methods=['POST'])
+@park_bp.route('/park', methods=['POST'])
 @jwt_required()
 def add_park():
-    body_data = request.get_json()
-    # Create new instance model
-    new_park = Park(
-        park_name=body_data.get('park_name'),
-        description=body_data.get('description'),
-        address_id=body_data.get('address_id'),
-        user_id=body_data.get('user_id')
+    data = request.get_json()
+
+    # create a new address object
+    new_address = Address(
+        address=data['address'],
+        city_id=data['city_id'],
     )
+    db.session.add(new_address)
+    db.session.flush()  # This assigns an id to the new address object
 
-    # Add that Park to the new session
+    # create a new park object
+    new_park = Park(
+        park_name=data['park_name'],
+        description=data['description'],
+        address_id=new_address.id,  # use the id of the just-created address
+        user_id=data['user_id']
+    )
     db.session.add(new_park)
-    # Commit
     db.session.commit()
-    # Respond to the client
-    return park_schema.dump(new_park), 201
+
+    return {'message': f'Park {new_park.park_name} created successfully'}, 201
 
 
-@park_db.route('/<int:id>', methods=['DELETE'])
+@park_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 def delete_park(id):
     stmt = db.select(park).filter_by(id=id)

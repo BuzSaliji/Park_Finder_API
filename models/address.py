@@ -10,6 +10,7 @@ class Address(db.Model):
     city_id = db.Column(db.Integer, db.ForeignKey('city.id'), nullable=False)
 
     city = db.relationship('City', back_populates='addresses')
+    parks = db.relationship('Park', back_populates='address')
 
 
 class AddressSchema(ma.Schema):
