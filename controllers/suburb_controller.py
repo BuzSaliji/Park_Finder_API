@@ -47,7 +47,7 @@ def add_suburb():
     body_data = request.get_json()
     # Create new suburb model instance
     new_suburb = Suburb(
-        suburb=body_data.get('suburb'),
+        suburb_name=body_data.get('suburb'),
         city_id=body_data.get('city_id')
     )
 

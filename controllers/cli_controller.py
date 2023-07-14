@@ -3,7 +3,7 @@ from init import db, bcrypt
 from models.user import User
 from models.state import State
 from models.city import City
-from models.address import Address
+from models.suburb import Suburb
 from models.park import Park
 from models.review import Review
 
@@ -72,4 +72,42 @@ def seed_db():
     db.session.add_all(cities)
     db.session.commit()
 
-    print("Tables Seeded")
+    # Seed suburbs
+    suburbs = [
+        Suburb(suburb_name='Newington', city_id=City.query.filter_by(
+            city_name='Sydney').first().id),
+        Suburb(suburb_name='Wallan', city_id=City.query.filter_by(
+            city_name='Melbourne').first().id),
+        Suburb(suburb_name='Seventeen Mile Rocks',
+               city_id=City.query.filter_by(city_name='Brisbane').first().id),
+        Suburb(suburb_name='Whiteman', city_id=City.query.filter_by(
+            city_name='Perth').first().id),
+        Suburb(suburb_name='St Kilda', city_id=City.query.filter_by(
+            city_name='Adelaide').first().id),
+        Suburb(suburb_name='Molonglo Valley', city_id=City.query.filter_by(
+            city_name='Canberra').first().id),
+    ]
+
+    db.session.add_all(suburbs)
+    db.session.commit()
+
+    parks = [
+        Park(park_name='Blaxland Riverside Park', description='Blaxland Riverside Park is a sprawling park located in the suburb of Newington, Sydney. It offers a wide range of activities for children, including climbing ropes, giant slides, swings, a flying fox, and sand play areas. The park also features bike tracks, water play areas, and plenty of open space for picnics and ball games.', address='Jamieson St', suburb_id=Suburb.query.filter_by(
+            suburb_name='Newington').first().id, user_id=User.query.filter_by(username='admin').first().id),
+        Park(park_name='Adventure Park', description='Adventure Park is a popular theme park located in Wallan, just outside of Melbourne. It offers a variety of attractions and rides suitable for kids of all ages, including water slides, pools, mini-golf, paddle boats, and a dedicated play area with climbing structures and a maze. Its a great place for a day of thrilling adventures and family fun.', address='1251 Melbourne Rd', suburb_id=Suburb.query.filter_by(
+            suburb_name='Wallan').first().id, user_id=User.query.filter_by(username='admin').first().id),
+        Park(park_name='Rocks Riverside Park', description='Rocks Riverside Park is a spacious park situated in the suburb of Seventeen Mile Rocks, Brisbane. It features an extensive playground with climbing nets, slides, swings, and a large sand play area. The park also offers bike tracks, basketball courts, a flying fox, and riverside picnic spots, making it an ideal destination for outdoor activities and family gatherings.', address=' 5 Counihan Rd', suburb_id=Suburb.query.filter_by(
+            suburb_name='Seventeen Mile Rocks').first().id, user_id=User.query.filter_by(username='admin').first().id),
+        Park(park_name='Whiteman Park', description='Whiteman Park is a large recreational area located in the suburb of Whiteman, near Perth. It offers several childrens playgrounds with various play equipment, including slides, swings, and climbing structures. The park also features a tram ride, mini train, wildlife encounters, walking trails, and open spaces for picnics and nature exploration.', address='Lord St & W Swan Rd', suburb_id=Suburb.query.filter_by(
+            suburb_name='Whiteman').first().id, user_id=User.query.filter_by(username='admin').first().id),
+        Park(park_name='St Kilda Adventure Playground', description='St Kilda Adventure Playground is a popular destination for kids located in the suburb of St Kilda, Adelaide. The park offers a range of unique play structures, including pirate ships, slides, treehouses, and flying foxes. It also features a water play area, BMX track, mini-golf, and plenty of shady spots for picnics and relaxation.', address='5th St', suburb_id=Suburb.query.filter_by(
+            suburb_name='St Kilda').first().id, user_id=User.query.filter_by(username='admin').first().id),
+        Park(park_name='Pod Playground at the National Arboretum', description='The Pod Playground is a creative and nature-themed play space located within the National Arboretum in the Molonglo Valley, Canberra. The park features giant acorn-shaped climbing frames, slides, and swings. Kids can also explore the nearby forests and enjoy the beautiful views of the city. The Pod Playground offers a unique blend of play and nature appreciation.', address='Forest Dr', suburb_id=Suburb.query.filter_by(
+            suburb_name='Molonglo Valley').first().id, user_id=User.query.filter_by(username='admin').first().id),
+    ]
+
+    db.session.add_all(parks)
+    db.session.commit()
+
+
+print("Tables Seeded")
