@@ -47,6 +47,7 @@ def get_suburb(id):
 
 @suburb_bp.route('/', methods=['POST'])
 @jwt_required()
+@authorise_as_admin
 def add_suburb():
     body_data = request.get_json()
     # Create new suburb model instance

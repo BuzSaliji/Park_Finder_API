@@ -1,5 +1,5 @@
 from init import db, ma
-from marshmallow import fields
+from marshmallow import fields, validates, ValidationError
 
 
 class Suburb(db.Model):
@@ -15,6 +15,12 @@ class Suburb(db.Model):
 
 class SuburbSchema(ma.Schema):
     city = fields.Nested('CitySchema', exclude=['cities'])
+
+    @validates('suburb_name')
+    def validate_suburb_name(self, value):
+        if not value.isalpha():
+            raise ValidationError(
+                'Suburb name should only contain alphabetic characters')
 
     class Meta:
         fields = ('id', 'suburb_name', 'city_id')

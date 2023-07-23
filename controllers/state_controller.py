@@ -74,3 +74,16 @@ def delete_state(id):
         return {'message': f'State {state.state_name} deleted successfully'}, 200
     else:
         return {'error': f'State not found with id {id}'}, 404
+
+
+@state_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
+@jwt_required()
+@authorise_as_admin
+def update_one_state(id):
+    body_data = state_schema.load(request.get_json(), partial=True)
+    stmt = db.select(State).filter_by(id=id)
+    state = db.session.scalar(stmt)
+    if state:
+        state.state_name = body_data.get('state_name') or state.state_name
+    else:
+        return {'error': f'State not found with id {id}'}, 404

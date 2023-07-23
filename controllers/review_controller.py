@@ -2,6 +2,7 @@ from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import SQLAlchemyError
 from models.review import Review, review_schema, reviews_schema
+from models.user import User
 from init import db
 import functools
 
@@ -38,38 +39,51 @@ def get_review(user_id, park_id):
 @review_bp.route('/', methods=['POST'])
 @jwt_required()
 def add_review():
-    body_data = request.get_json()
-    # Create new review model instance
+    body_data = request.get_json
+    # Validate the rating
+    rating = body_data.get('rating')
+    if rating is None or rating < 1 or rating > 10:
+        return {'error': 'Rating must be between 1 and 10'}, 400
+
+    # Continue with creating model instance
     new_review = Review(
         user_id=body_data.get('user_id'),
         park_id=body_data.get('park_id'),
-        rating=body_data.get('rating'),
+        rating=rating,
         comment=body_data.get('comment')
     )
+
     db.session.add(new_review)
     db.session.commit()
+
     return {'message': f'review {new_review} created successfully'}, 201
 
 # Delete a review
 
 
-@review_bp.route('/<int:user_id>/<int:park_id>', methods=['DELETE'])
-def delete_review(user_id, park_id):
-    stmt = db.select(Review).where(
-        (Review.user_id == user_id) & (Review.park_id == park_id))
-    review = db.session.execute(stmt).scalars().one_or_none()
+@review_bp.route('/<int:id>', methods=['DELETE'])
+@jwt_required()
+def delete_review(id):
+    current_user_id = get_jwt_identity()
+    stmt = db.select(Review).filter_by(id=id)
+    review = db.session.scalar(stmt)
     if review:
+        if str(review.user_id) != current_user_id:
+            stmt = db.select(User).filter_by(id=current_user_id)
+            current_user = db.session.scalar(stmt)
+            if not current_user.is_admin:
+                return {'error': 'Not authorised to perform delete'}, 403
         db.session.delete(review)
         db.session.commit()
-        return {'message': f'Review for user_id {user_id} and park_id {park_id} deleted successfully'}, 200
+        return {'message': f'Review with id {id} deleted successfully'}, 200
     else:
-        return {'error': f'Review not found for user_id {user_id} and park_id {park_id}'}, 404
+        return {'error': f'Review not found with id {id}'}, 404
 
 
 # Route to update a review
 
 
-@review_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
+@review_bp.route('/<int:user_id>/<int:park_id>', methods=['PUT', 'PATCH'])
 @jwt_required()
 def update_one_review(id):
     body_data = review_schema.load(request.get_json(), partial=True)

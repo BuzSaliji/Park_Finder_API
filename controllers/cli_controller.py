@@ -109,5 +109,13 @@ def seed_db():
     db.session.add_all(parks)
     db.session.commit()
 
+    reviews = [
+        Review(user_id=1, park_id=1, rating=8, comment='Great park'),
+        Review(user_id=1, park_id=2, rating=8, comment='Great park'),
+    ]
+
+    db.session.add_all(reviews)
+    db.session.commit()
+
 
 print("Tables Seeded")

@@ -76,3 +76,18 @@ def delete_city(id):
         return {'message': f'City {city.city_name} deleted successfully'}, 200
     else:
         return {'error': f'City not found with id {id}'}, 404
+
+
+@city_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
+@jwt_required()
+@authorise_as_admin
+def update_one_city(id):
+    body_data = city_schema.load(request.get_json(), partial=True)
+    stmt = db.select(City).filter_by(id=id)
+    city = db.session.scalar(stmt)
+    if city:
+        city.city_name = body_data.get('city_name') or city.city_name
+        db.session.commit()
+        return city_schema.dump(city)
+    else:
+        return {'error': f'City not found with id {id}'}, 404

@@ -1,7 +1,13 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import joinedload
+from sqlalchemy.sql.expression import func
 from models.park import Park, park_schema, parks_schema
+from models.suburb import Suburb
+from models.city import City
+from models.state import State
+from models.review import review_schema
 from models.user import User
 from init import db
 import functools
@@ -43,12 +49,66 @@ def get_park(id):
     else:
         return {'error': f'park not found with id {id}'}, 404
 
+# Rout to find Parks by state
+
+
+@park_bp.route('/state/<string:state_name>')
+def get_park_by_state(state_name):
+    state_name = state_name.lower()
+
+    stmt = db.select(Park)\
+        .join(Suburb, Park.suburb_id == Suburb.id)\
+        .join(City, Suburb.city_id == City.id)\
+        .join(State, City.state_id == State.id)\
+        .where(func.lower(State.state_name) == state_name)
+
+    parks = db.session.execute(stmt).scalars().all()
+    if not parks:
+        return {'error': f'No parks found in state {state_name}'}, 404
+    else:
+        return parks_schema.dump(parks)
+
+# Route to find Parks by city
+
+
+@park_bp.route('/city/<string:city_name>')
+def get_parks_by_city(city_name):
+    city_name = city_name.lower()
+
+    stmt = db.select(Park)\
+        .join(Suburb, Park.suburb_id == Suburb.id)\
+        .join(City, Suburb.city_id == City.id)\
+        .where(func.lower(City.city_name) == city_name)
+
+    parks = db.session.execute(stmt).scalars().all()
+
+    if not parks:
+        return {'error': f'No parks found in city {city_name}'}, 404
+    else:
+        return parks_schema.dump(parks)
+
+
+@park_bp.route('/suburb/<string:suburb_name>')
+def get_parks_by_suburb(suburb_name):
+    suburb_name = suburb_name.lower()
+
+    stmt = db.select(Park)\
+        .join(Suburb, Park.suburb_id == Suburb.id)\
+        .where(func.lower(Suburb.suburb_name) == suburb_name)\
+
+    parks = db.session.execute(stmt).scalars().all()
+
+    if not parks:
+        return {'error': f'No Parks found in suburb {suburb_name}'}, 404
+    else:
+        return parks_schema.dump(parks)
+
+
 # Route to new park
 
 
 @park_bp.route('/park', methods=['POST'])
 @jwt_required()
-@authorise_as_admin
 def add_park():
     body_data = request.get_json()
     new_park = Park(
@@ -63,6 +123,7 @@ def add_park():
     db.session.commit()
 
     return {'message': f'Park {new_park.park_name} created successfully'}, 201
+
 
 # Route to delete a Park
 
@@ -84,7 +145,7 @@ def delete_park(id):
 # Route to update a Park
 
 
-@park_bp.route('/int:id', methods=['PUT', 'PATCH'])
+@park_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
 @jwt_required()
 @authorise_as_admin
 def update_one_park(id):
@@ -92,7 +153,7 @@ def update_one_park(id):
     stmt = db.select(Park).filter_by(id=id)
     park = db.session.scalar(stmt)
     if park:
-        park.name = body_data.get('park_name') or park.name
+        park.park_name = body_data.get('park_name') or park.park_name
         park.description = body_data.get('description') or park.description
         db.session.commit()
         return park_schema.dump(park)
