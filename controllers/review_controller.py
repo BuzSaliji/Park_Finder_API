@@ -8,20 +8,35 @@ from init import db
 from sqlalchemy import func
 import functools
 
-
+# Create a blueprint for the review routes
 review_bp = Blueprint('review_bp', __name__, url_prefix='/review')
 
+# Define a route to get all reviews with optional filtering
 
-# Route to all reviews
+
 @review_bp.route('/')
 def get_all_reviews():
+    min_rating = request.args.get('min_rating')
+    park_id = request.args.get('park_id')
+    user_id = request.args.get('user_id')
+    sort_by = request.args.get('sort_by')
+
     stmt = db.select(Review)
-    result = db.session.execute(stmt)
-    reviews = result.scalars().all()
-    return {"reviews": [review_schema.dump(review) for review in reviews]}
+
+    # Apply filters
+    if min_rating is not None:
+        stmt = stmt.where(Review.rating >= min_rating)
+    if park_id is not None:
+        stmt = stmt.where(Review.park_id == park_id)
+    if user_id is not None:
+        stmt = stmt.where(Review.user_id == user_id)
+
+    reviews = db.session.execute(stmt).scalars().all()
+    return reviews_schema.dump(reviews)
+
+# Define a route to get a single review by a user for a park
 
 
-# Route to a single review by a user
 @review_bp.route('/<int:user_id>/<int:park_id>')
 def get_review(user_id, park_id):
     stmt = db.select(Review).where(
@@ -32,26 +47,7 @@ def get_review(user_id, park_id):
     else:
         return {'error': f'Review not found for user_id {user_id} and park_id {park_id}'}, 404
 
-# Route to review by park name
-
-
-@review_bp.route('/park/<string:park_name>')
-def get_reviews_by_park_name(park_name):
-    lower_park_name = func.lower(park_name)
-
-    stmt = db.select(Review)\
-        .join(Park, Review.park_id == Park.id)\
-        .where(func.lower(Park.park_name) == lower_park_name)
-
-    reviews = db.session.execute(stmt).scalars().all()
-
-    if not reviews:
-        return {'error': f'No reviews found for park named {park_name}'}, 404
-    else:
-        return reviews_schema.dump(reviews)
-
-
-# Route to new review
+# Define a route to add a new review
 
 
 @review_bp.route('/', methods=['POST'])
@@ -89,8 +85,7 @@ def add_review():
 
     return {'message': f'review {new_review} created successfully'}, 201
 
-
-# Delete a review
+# Define a route to delete a review
 
 
 @review_bp.route('/<int:id>', methods=['DELETE'])
@@ -111,8 +106,7 @@ def delete_review(id):
     else:
         return {'error': f'Review not found with id {id}'}, 404
 
-
-# Route to update a review
+# Define a route to update a review
 
 
 @review_bp.route('/<int:user_id>/<int:park_id>', methods=['PUT', 'PATCH'])
