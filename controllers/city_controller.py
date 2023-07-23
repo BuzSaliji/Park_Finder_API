@@ -47,6 +47,7 @@ def get_city(id):
 
 @city_bp.route('/', methods=['POST'])
 @jwt_required()
+@authorise_as_admin
 def add_city():
     body_data = request.get_json()
     # Create a new City model instance
