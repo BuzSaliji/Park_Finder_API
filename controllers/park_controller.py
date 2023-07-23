@@ -33,9 +33,34 @@ def authorise_as_admin(fn):
 
 @park_bp.route('/')
 def get_all_parks():
-    stmt = db.select(Park)
-    parks = db.session.scalars(stmt)
+    state_name = request.args.get('state')
+    city_name = request.args.get('city')
+    suburb_name = request.args.get('suburb')
+
+    stmt = db.select(Park).join(Suburb, Park.suburb_id == Suburb.id)
+
+    if state_name:
+        state_name = state_name.lower()
+        stmt = stmt.join(City, Suburb.city_id == City.id)\
+            .join(State, City.state_id == State.id)\
+            .where(func.lower(State.state_name) == state_name)
+
+    if city_name:
+        city_name = city_name.lower()
+        stmt = stmt.join(City, Suburb.city_id == City.id)\
+            .where(func.lower(City.city_name) == city_name)
+
+    if suburb_name:
+        suburb_name = suburb_name.lower()
+        stmt = stmt.where(func.lower(Suburb.suburb_name) == suburb_name)
+
+    parks = db.session.execute(stmt).scalars().fetchall()
+
+    if not parks:
+        return {'error': 'No parks found with the provided filters'}, 404
+
     return parks_schema.dump(parks)
+
 
 # Route to a single Park
 
@@ -48,60 +73,6 @@ def get_park(id):
         return park_schema.dump(park)
     else:
         return {'error': f'park not found with id {id}'}, 404
-
-# Rout to find Parks by state
-
-
-@park_bp.route('/state/<string:state_name>')
-def get_park_by_state(state_name):
-    state_name = state_name.lower()
-
-    stmt = db.select(Park)\
-        .join(Suburb, Park.suburb_id == Suburb.id)\
-        .join(City, Suburb.city_id == City.id)\
-        .join(State, City.state_id == State.id)\
-        .where(func.lower(State.state_name) == state_name)
-
-    parks = db.session.execute(stmt).scalars().all()
-    if not parks:
-        return {'error': f'No parks found in state {state_name}'}, 404
-    else:
-        return parks_schema.dump(parks)
-
-# Route to find Parks by city
-
-
-@park_bp.route('/city/<string:city_name>')
-def get_parks_by_city(city_name):
-    city_name = city_name.lower()
-
-    stmt = db.select(Park)\
-        .join(Suburb, Park.suburb_id == Suburb.id)\
-        .join(City, Suburb.city_id == City.id)\
-        .where(func.lower(City.city_name) == city_name)
-
-    parks = db.session.execute(stmt).scalars().all()
-
-    if not parks:
-        return {'error': f'No parks found in city {city_name}'}, 404
-    else:
-        return parks_schema.dump(parks)
-
-
-@park_bp.route('/suburb/<string:suburb_name>')
-def get_parks_by_suburb(suburb_name):
-    suburb_name = suburb_name.lower()
-
-    stmt = db.select(Park)\
-        .join(Suburb, Park.suburb_id == Suburb.id)\
-        .where(func.lower(Suburb.suburb_name) == suburb_name)\
-
-    parks = db.session.execute(stmt).scalars().all()
-
-    if not parks:
-        return {'error': f'No Parks found in suburb {suburb_name}'}, 404
-    else:
-        return parks_schema.dump(parks)
 
 
 # Route to new park
