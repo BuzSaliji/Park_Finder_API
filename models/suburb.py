@@ -15,8 +15,8 @@ class Suburb(db.Model):
 
     # Relationship to the City model
     city = db.relationship('City', back_populates='suburbs')
-    # Relationship to the Park model
-    parks = db.relationship('Park', back_populates='suburb')
+    # Relationship to the Address model
+    addresses = db.relationship('Address', back_populates='suburb')
 
 # Define the schema for the Suburb model for serialisation
 

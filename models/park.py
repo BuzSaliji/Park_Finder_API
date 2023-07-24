@@ -12,13 +12,13 @@ class Park(db.Model):
     # Description of the park
     description = db.Column(db.String(500), nullable=False)
     address = db.Column(db.String(250), nullable=False)  # Address of the park
-    suburb_id = db.Column(db.Integer, db.ForeignKey(
-        'suburb.id'), nullable=False)  # Foreign key to the Suburb table
+    address_id = db.Column(db.Integer, db.ForeignKey(
+        'address.id'), nullable=False)  # Foreign key to the Address table
     user_id = db.Column(db.Integer, db.ForeignKey(
         'users.id'), nullable=False)  # Foreign key to the Users table
 
-    # Relationship to the Suburb model
-    suburb = db.relationship('Suburb', back_populates='parks')
+    # Relationship to the Address model
+    address = db.relationship('Address', back_populates='park')
     # Relationship to the User model
     user = db.relationship('User', back_populates='parks')
     # Relationship to the Review model
@@ -40,8 +40,8 @@ class ParkSchema(ma.Schema):
                 'Park name should only contain alphabetic characters')
 
     class Meta:
-        fields = ('id', 'park_name',  'description',
-                  'address', 'suburb_id', 'user_id')  # Fields to include in the serialised output
+        # Fields to include in the serialised output
+        fields = ('id', 'park_name',  'description', 'address_id', 'user_id')
         ordered = True  # Order the fields in the output
 
 

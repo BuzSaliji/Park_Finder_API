@@ -2,6 +2,8 @@ from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.sql.expression import func
 from models.park import Park, park_schema, parks_schema
+from models.review import Review, reviews_schema
+from models.address import Address
 from models.suburb import Suburb
 from models.city import City
 from models.state import State
@@ -29,7 +31,7 @@ def authorise_as_admin(fn):
             return {'error': 'Not authorised to perform delete'}, 403
     return wrapper
 
-# Define a route to get all parks with optional filtering by state, city, and suburb
+# Define a route to get all parks with optional filtering by state, city,suburb.
 
 
 @park_bp.route('/')
@@ -38,7 +40,8 @@ def get_all_parks():
     city_name = request.args.get('city')
     suburb_name = request.args.get('suburb')
 
-    stmt = db.select(Park).join(Suburb, Park.suburb_id == Suburb.id)
+    stmt = db.select(Park).join(Address, Park.address_id == Address.id).join(
+        Suburb, Address.suburb_id == Suburb.id)
 
     if state_name:
         state_name = state_name.lower()
@@ -62,10 +65,35 @@ def get_all_parks():
 
     return parks_schema.dump(parks)
 
+
+@park_bp.route('/search')
+def search_parks():
+    search_term = request.args.get('name').lower()
+    stmt = db.select(Park).where(func.lower(
+        Park.park_name).contains(search_term))
+    parks = db.session.execute(stmt).scalars().fetchall()
+
+    if not parks:
+        return {'error': 'No parks found with the provided filters'}, 404
+
+    return parks_schema.dump(parks)
+
+
+@park_bp.route('/<int:id>/reviews')
+def get_park_reviews(id):
+    stmt = db.select(Review).where(Review.park_id == id)
+    reviews = db.session.execute(stmt).scalars().all()
+
+    if not reviews:
+        return {'error': 'No reviews found for this park'}, 404
+
+    return reviews_schema.dump(reviews)
+
+
 # Define a route to get a single park by its ID
 
 
-@park_bp.route('/<int:id>')
+@park_bp.route('/<int:id>', methods=['GET'])
 def get_park(id):
     stmt = db.select(Park).filter_by(id=id)  # Find the park in the database
     park = db.session.scalar(stmt)  # Fetch the first result
@@ -92,8 +120,7 @@ def add_park():
     new_park = Park(
         park_name=body_data.get('park_name'),
         description=body_data.get('description'),
-        address=body_data.get('address'),
-        suburb_id=body_data.get('suburb_id'),
+        address_id=body_data.get('address_id'),
         user_id=body_data.get('user_id')
     )
 
