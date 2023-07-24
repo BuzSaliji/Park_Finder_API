@@ -18,7 +18,7 @@ class Park(db.Model):
         'users.id'), nullable=False)  # Foreign key to the Users table
 
     # Relationship to the Address model
-    address = db.relationship('Address', back_populates='park')
+    address = db.relationship('Address', back_populates='park', uselist=False)
     # Relationship to the User model
     user = db.relationship('User', back_populates='parks')
     # Relationship to the Review model
@@ -28,20 +28,20 @@ class Park(db.Model):
 
 
 class ParkSchema(ma.Schema):
-    suburb = fields.Nested('suburbSchema', exclude=[
-                           'suburbs'])  # Nested Suburb schema
-    user = fields.Nested('UserSchema', exclude=['users'])  # Nested User schema
 
-    @validates('park_name')  # Validation for the park_name field
+    # Nested User schema
+    user = fields.Nested('UserSchema', only=['name'])
+    address = fields.Nested('AddressSchema', only=['street_name', 'postcode'])
+
+    @validates('park_name')
     def validate_park_name(self, value):
-        # Raise a validation error if the park name is not alphabetic
-        if not value.isalpha():
+        if not value.replace(" ", "").isalpha():
             raise ValidationError(
-                'Park name should only contain alphabetic characters')
+                'Park name should only contain alphabetic characters and spaces')
 
     class Meta:
         # Fields to include in the serialised output
-        fields = ('id', 'park_name',  'description', 'address_id', 'user_id')
+        fields = ('id', 'park_name',  'description', 'user', 'address')
         ordered = True  # Order the fields in the output
 
 

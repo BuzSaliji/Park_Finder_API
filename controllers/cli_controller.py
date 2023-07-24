@@ -42,150 +42,135 @@ def seed_db():
     db.session.add_all(users)
 
     # Seed states
+
+
+@db_commands.cli.command('seed')
+def seed_db():
+    # Seed users
+    users = [
+        User(
+            username='admin',
+            email='admin@admin.com',
+            password=bcrypt.generate_password_hash('admin123').decode('utf-8'),
+            is_admin=True
+        ),
+        User(
+            username='User1',
+            email='user1@email.com',
+            password=bcrypt.generate_password_hash('user1pw').decode('utf-8')
+        )
+    ]
+    db.session.add_all(users)
+    db.session.commit()
+
+    # Seed states
     states = [
         State(state_name='New South Wales'),
-
         State(state_name='Victoria'),
-
         State(state_name='Queensland'),
-
         State(state_name='Western Australia'),
-
         State(state_name='South Australia'),
-
         State(state_name='ACT'),
-
         State(state_name='Tasmania'),
     ]
-
     db.session.add_all(states)
-    db.session.commit()  # Commit so that we have the IDs for the next step
+    db.session.commit()
 
     # Seed cities
-    cities = [
-        City(city_name='Sydney', state_id=State.query.filter_by(
-            state_name='New South Wales').first().id),
-
-        City(city_name='Melbourne', state_id=State.query.filter_by(
-            state_name='Victoria').first().id),
-
-        City(city_name='Brisbane', state_id=State.query.filter_by(
-            state_name='Queensland').first().id),
-
-        City(city_name='Perth', state_id=State.query.filter_by(
-            state_name='Western Australia').first().id),
-
-        City(city_name='Adelaide', state_id=State.query.filter_by(
-            state_name='South Australia').first().id),
-
-        City(city_name='Canberra', state_id=State.query.filter_by(
-            state_name='ACT').first().id),
-
-        City(city_name='Hobart', state_id=State.query.filter_by(
-            state_name='Tasmania').first().id),
-
-        City(city_name='Wollongong', state_id=State.query.filter_by(
-            state_name='New South Wales').first().id),
+    city = [
+        ('Sydney', 'New South Wales'),
+        ('Melbourne', 'Victoria'),
+        ('Brisbane', 'Queensland'),
+        ('Perth', 'Western Australia'),
+        ('Adelaide', 'South Australia'),
+        ('Canberra', 'ACT'),
+        ('Hobart', 'Tasmania'),
+        ('Wollongong', 'New South Wales'),
     ]
-
-    db.session.add_all(cities)
+    for city_name, state_name in city:
+        stmt = db.select(State.id).where(State.state_name == state_name)
+        state_id = db.session.execute(stmt).scalar()
+        db.session.add(City(city_name=city_name, state_id=state_id))
     db.session.commit()
 
     # Seed suburbs
-    suburbs = [
-        Suburb(suburb_name='Newington', city_id=City.query.filter_by(
-            city_name='Sydney').first().id),
-        Suburb(suburb_name='Wallan', city_id=City.query.filter_by(
-            city_name='Melbourne').first().id),
-        Suburb(suburb_name='Seventeen Mile Rocks',
-               city_id=City.query.filter_by(city_name='Brisbane').first().id),
-        Suburb(suburb_name='Whiteman', city_id=City.query.filter_by(
-            city_name='Perth').first().id),
-        Suburb(suburb_name='St Kilda', city_id=City.query.filter_by(
-            city_name='Adelaide').first().id),
-        Suburb(suburb_name='Molonglo Valley', city_id=City.query.filter_by(
-            city_name='Canberra').first().id),
-        Suburb(suburb_name='Battery Point', city_id=City.query.filter_by(
-            city_name='Hobart').first().id),
-        Suburb(suburb_name='Fairy Meadow', city_id=City.query.filter_by(
-            city_name='Wollongong').first().id),
+    suburb = [
+        ('Newington', 'Sydney'),
+        ('Wallan', 'Melbourne'),
+        ('Seventeen Mile Rocks', 'Brisbane'),
+        ('Whiteman', 'Perth'),
+        ('St Kilda', 'Adelaide'),
+        ('Molonglo Valley', 'Canberra'),
+        ('Battery Point', 'Hobart'),
+        ('Fairy Meadow', 'Wollongong'),
     ]
-
-    db.session.add_all(suburbs)
+    for suburb_name, city_name in suburb:
+        stmt = db.select(City.id).where(City.city_name == city_name)
+        city_id = db.session.execute(stmt).scalar()
+        db.session.add(Suburb(suburb_name=suburb_name, city_id=city_id))
     db.session.commit()
 
+    # Seed addresses
     addresses = [
-        Address(street_number='147', street_name='Jamieson St', postcode='2127',
-                suburb_id=Suburb.query.filter_by(suburb_name='Newington').first().id),
-
-        Address(street_number='1251', street_name='Melbourne Rd', postcode='3756',
-                suburb_id=Suburb.query.filter_by(suburb_name='Wallan').first().id),
-
-        Address(street_number='5', street_name='Counihan Rd', postcode='4073',
-                suburb_id=Suburb.query.filter_by(suburb_name='Seventeen Mile Rocks').first().id),
-
-        Address(street_number='147', street_name='Lord St & W Swan Rd', postcode='6068',
-                suburb_id=Suburb.query.filter_by(suburb_name='Whiteman').first().id),
-
-        Address(street_number='5', street_name='5th St', postcode='3182',
-                suburb_id=Suburb.query.filter_by(suburb_name='St Kilda').first().id),
-
-        Address(street_number='34', street_name='Forest Dr', postcode='2611',
-                suburb_id=Suburb.query.filter_by(suburb_name='Molonglo Valley').first().id),
-
-        Address(street_number='112', street_name='Salamanca Pl', postcode='7004',
-                suburb_id=Suburb.query.filter_by(suburb_name='Battery Point').first().id),
-
-        Address(street_number='99', street_name='Ellen St', postcode='2500',
-                suburb_id=Suburb.query.filter_by(suburb_name='Fairy Meadow').first().id),
-
+        (147, 'Jamieson St', 2127, 'Newington'),
+        (1251, 'Melbourne Rd', 3756, 'Wallan'),
+        (5, 'Counihan Rd', 4073, 'Seventeen Mile Rocks'),
+        (147, 'Lord St & W Swan Rd', 6068, 'Whiteman'),
+        (5, '5th St', 3182, 'St Kilda'),
+        (34, 'Forest Dr', 2611, 'Molonglo Valley'),
+        (112, 'Salamanca Pl', 7004, 'Battery Point'),
+        (99, 'Ellen St', 2500, 'Fairy Meadow'),
     ]
-    db.session.add_all(addresses)
+    for street_number, street_name, postcode, suburb_name in addresses:
+        stmt = db.select(Suburb.id).where(Suburb.suburb_name == suburb_name)
+        suburb_id = db.session.execute(stmt).scalar()
+        db.session.add(Address(street_number=street_number, street_name=street_name,
+                               postcode=postcode, suburb_id=suburb_id))
     db.session.commit()
 
+    # Seed parks
     parks = [
-        Park(park_name='Blaxland Riverside Park', description='Blaxland Riverside Park is a sprawling park located in the suburb of Newington, Sydney. It offers a wide range of activities for children, including climbing ropes, giant slides, swings, a flying fox, and sand play areas. The park also features bike tracks, water play areas, and plenty of open space for picnics and ball games.',
-             address_id=Address.query.filter_by(street_name='Jamieson St', street_number='147', postcode='2127').first().id, user_id=User.query.filter_by(username='admin').first().id),
+        ('Blaxland Riverside Park', 'Blaxland Riverside Park is a sprawling park located in the suburb of Newington, Sydney. It offers a wide range of activities for children, including climbing ropes, giant slides, swings, a flying fox, and sand play areas. The park also features bike tracks, water play areas, and plenty of open space for picnics and ball games.', 'Jamieson St', 147, 2127, 'admin'),
 
-        Park(park_name='Adventure Park', description='Adventure Park is a popular theme park located in Wallan, just outside of Melbourne. It offers a variety of attractions and rides suitable for kids of all ages, including water slides, pools, mini-golf, paddle boats, and a dedicated play area with climbing structures and a maze. Its a great place for a day of thrilling adventures and family fun.',
-             address_id=Address.query.filter_by(street_name='Melbourne Rd', street_number='1251', postcode='3756').first().id, user_id=User.query.filter_by(username='admin').first().id),
+        ('Adventure Park', 'Adventure Park is a popular theme park located in Wallan, just outside of Melbourne. It offers a variety of attractions and rides suitable for kids of all ages, including water slides, pools, mini-golf, paddle boats, and a dedicated play area with climbing structures and a maze. Its a great place for a day of thrilling adventures and family fun.', 'Melbourne Rd', 1251, 3756, 'admin'),
 
-        Park(park_name='Rocks Riverside Park', description='Rocks Riverside Park is a spacious park situated in the suburb of Seventeen Mile Rocks, Brisbane. It features an extensive playground with climbing nets, slides, swings, and a large sand play area. The park also offers bike tracks, basketball courts, a flying fox, and riverside picnic spots, making it an ideal destination for outdoor activities and family gatherings.',
-             address_id=Address.query.filter_by(street_name='Counihan Rd', street_number='5', postcode='4073').first().id, user_id=User.query.filter_by(username='admin').first().id),
+        ('Rocks Riverside Park', 'Rocks Riverside Park is a spacious park situated in the suburb of Seventeen Mile Rocks, Brisbane. It features an extensive playground with climbing nets, slides, swings, and a large sand play area. The park also offers bike tracks, basketball courts, a flying fox, and riverside picnic spots, making it an ideal destination for outdoor activities and family gatherings.', 'Counihan Rd', 5, 4073, 'admin'),
 
-        Park(park_name='Whiteman Park', description='Whiteman Park is a large recreational area located in the suburb of Whiteman, near Perth. It offers several childrens playgrounds with various play equipment, including slides, swings, and climbing structures. The park also features a tram ride, mini train, wildlife encounters, walking trails, and open spaces for picnics and nature exploration.',
-             address_id=Address.query.filter_by(street_name='Lord St & W Swan Rd', street_number='147', postcode='6068').first().id, user_id=User.query.filter_by(username='admin').first().id),
+        ('Whiteman Park', 'Whiteman Park is a large recreational area located in the suburb of Whiteman, near Perth. It offers several childrens playgrounds with various play equipment, including slides, swings, and climbing structures. The park also features a tram ride, mini train, wildlife encounters, walking trails, and open spaces for picnics and nature exploration.', 'Lord St & W Swan Rd', 147, 6068, 'admin'),
 
-        Park(park_name='St Kilda Adventure Playground', description='St Kilda Adventure Playground is a popular destination for kids located in the suburb of St Kilda, Adelaide. The park offers a range of unique play structures, including pirate ships, slides, treehouses, and flying foxes. It also features a water play area, BMX track, mini-golf, and plenty of shady spots for picnics and relaxation.',
-             address_id=Address.query.filter_by(street_name='5th St', postcode='3182').first().id, user_id=User.query.filter_by(username='admin').first().id),
+        ('St Kilda Adventure Playground', 'St Kilda Adventure Playground is a popular destination for kids located in the suburb of St Kilda, Adelaide. The park offers a range of unique play structures, including pirate ships, slides, treehouses, and flying foxes. It also features a water play area, BMX track, mini-golf, and plenty of shady spots for picnics and relaxation.', '5th St', 5, 3182, 'admin'),
 
-        Park(park_name='Pod Playground at the National Arboretum', description='The Pod Playground is a creative and nature-themed play space located within the National Arboretum in the Molonglo Valley, Canberra. The park features giant acorn-shaped climbing frames, slides, and swings. Kids can also explore the nearby forests and enjoy the beautiful views of the city. The Pod Playground offers a unique blend of play and nature appreciation.',
-             address_id=Address.query.filter_by(street_name='Forest Dr', street_number='34', postcode='2611').first().id, user_id=User.query.filter_by(username='admin').first().id),
+        ('Pod Playground at the National Arboretum', 'The Pod Playground is a creative and nature-themed play space located within the National Arboretum in the Molonglo Valley, Canberra. The park features giant acorn-shaped climbing frames, slides, and swings. Kids can also explore the nearby forests and enjoy the beautiful views of the city. The Pod Playground offers a unique blend of play and nature appreciation.', 'Forest Dr', 34, 2611, 'admin'),
 
-        Park(park_name='Battery Point Sculpture Trail', description='A walkable trail with various sculptures located in the historic suburb of Battery Point, Hobart. It offers a unique blend of art and history.',
-             address_id=Address.query.filter_by(street_name='Salamanca Pl', street_number='112', postcode='7004').first().id, user_id=User.query.filter_by(username='admin').first().id),
+        ('Battery Point Sculpture Trail', 'A walkable trail with various sculptures located in the historic suburb of Battery Point, Hobart. It offers a unique blend of art and history.', 'Salamanca Pl', 112, 7004, 'admin'),
 
-        Park(park_name='Fairy Meadow Beach Park', description='A beautiful beach park located in the suburb of Fairy Meadow, Wollongong. It offers a great place for a family picnic with playgrounds, BBQ areas, and clean sandy beach.',
-             address_id=Address.query.filter_by(street_name='Ellen St', street_number='99', postcode='2500').first().id, user_id=User.query.filter_by(username='admin').first().id),
+        ('Fairy Meadow Beach Park', 'A beautiful beach park located in the suburb of Fairy Meadow, Wollongong. It offers a great place for a family picnic with playgrounds, BBQ areas, and clean sandy beach.', 'Ellen St', 99, 2500, 'admin'),
     ]
+    for park_name, description, street_name, street_number, postcode, username in parks:
+        stmt_address = db.select(Address.id).where(
+            (Address.street_name == street_name) &
+            (Address.street_number == street_number) &
+            (Address.postcode == postcode)
+        )
+        address_id = db.session.execute(stmt_address).scalar()
 
-    db.session.add_all(parks)
+        stmt_user = db.select(User.id).where(User.username == username)
+        user_id = db.session.execute(stmt_user).scalar()
+
+        db.session.add(Park(park_name=park_name, description=description,
+                            address_id=address_id, user_id=user_id))
     db.session.commit()
 
-    reviews = [
-        Review(user_id=1, park_id=1, rating=6, comment='Nice park'),
-
-        Review(user_id=1, park_id=2, rating=6, comment='Nice park'),
-
-        Review(user_id=1, park_id=3, rating=9,
-               comment='Wonderful sculpture trail in a beautiful suburb.'),
-
-        Review(user_id=1, park_id=8, rating=10,
-               comment='Amazing beach park with a lot of amenities. A must visit in Wollongong.'),
+    # Seed reviews
+    reviews_data = [
+        (1, 1, 6, 'Nice park'),
+        (1, 2, 6, 'Nice park'),
+        (1, 3, 9, 'Wonderful sculpture trail in a beautiful suburb.'),
+        (1, 8, 10, 'Amazing beach park with a lot of amenities. A must visit in Wollongong.'),
     ]
-
-    db.session.add_all(reviews)
+    for user_id, park_id, rating, comment in reviews_data:
+        db.session.add(Review(user_id=user_id, park_id=park_id,
+                              rating=rating, comment=comment))
     db.session.commit()
 
-
-print("Tables Seeded")
+    print("Tables Seeded")

@@ -1,5 +1,7 @@
 from init import db, ma
 from marshmallow import fields
+from marshmallow import validates, ValidationError
+from marshmallow.validate import Length, Email
 
 # Define the User model
 
@@ -24,6 +26,23 @@ class User(db.Model):
 
 
 class UserSchema(ma.Schema):
+    @validates('username')
+    def validate_username(self, value):
+        if not value.isalnum():
+            raise ValidationError(
+                'Username should only contain alphanumeric characters')
+
+    @validates('password')
+    def validate_password(self, value):
+        if len(value) < 8:
+            raise ValidationError(
+                'Password should be at least 8 characters long')
+
+    @validates('email')
+    def validate_email(self, value):
+        if not Email()(value):
+            raise ValidationError('Invalid email address')
+
     class Meta:
         # Fields to include in the serialised output
         fields = ('id', 'username', 'email', 'password', 'is_admin')

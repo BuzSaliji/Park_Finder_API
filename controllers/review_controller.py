@@ -5,11 +5,12 @@ from models.review import Review, review_schema, reviews_schema
 from models.user import User
 from models.park import Park
 from init import db
-from sqlalchemy import func
+from sqlalchemy import and_
 import functools
 
 # Create a blueprint for the review routes
 review_bp = Blueprint('review_bp', __name__, url_prefix='/review')
+
 
 # Define a route to get all reviews with optional filtering
 
@@ -59,6 +60,7 @@ def get_review(user_id, park_id):
 # Define a route to add a new review
 
 
+# Define a route to add a new review
 @review_bp.route('/', methods=['POST'])
 @jwt_required()  # Requires a valid access token in the request header
 def add_review():
@@ -79,8 +81,9 @@ def add_review():
     # Check if the user has already reviewed the park
     user_id = body_data.get('user_id')
     park_id = body_data.get('park_id')
-    existing_review = Review.query.filter_by(
-        user_id=user_id, park_id=park_id).first()
+    stmt = db.select(Review).where(
+        and_(Review.user_id == user_id, Review.park_id == park_id))
+    existing_review = db.session.execute(stmt).scalars().first()
     if existing_review:
         return {'error': 'You have already reviewed this park'}, 400
 
@@ -109,7 +112,9 @@ def delete_review(user_id, park_id):
     current_user_id = get_jwt_identity()
 
     # Fetch the review to be deleted
-    review = Review.query.filter_by(user_id=user_id, park_id=park_id).first()
+    stmt = db.select(Review).where(
+        and_(Review.user_id == user_id, Review.park_id == park_id))
+    review = db.session.execute(stmt).scalars().first()
 
     # If the review exists, delete it, else return an error message
     if review:
@@ -129,9 +134,8 @@ def delete_review(user_id, park_id):
     else:
         return {'error': 'Review not found'}, 404
 
+
 # Define a route to update a review
-
-
 @review_bp.route('/<int:user_id>/<int:park_id>', methods=['PUT', 'PATCH'])
 @jwt_required()  # Requires a valid access token in the request header
 def update_one_review(user_id, park_id):
@@ -139,7 +143,9 @@ def update_one_review(user_id, park_id):
     body_data = review_schema.load(request.get_json(), partial=True)
 
     # Fetch the review to be updated
-    review = Review.query.filter_by(user_id=user_id, park_id=park_id).first()
+    stmt = db.select(Review).where(
+        and_(Review.user_id == user_id, Review.park_id == park_id))
+    review = db.session.execute(stmt).scalars().first()
 
     # If the review exists, update it, else return an error message
     if review:

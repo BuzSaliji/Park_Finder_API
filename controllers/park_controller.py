@@ -34,59 +34,86 @@ def authorise_as_admin(fn):
 # Define a route to get all parks with optional filtering by state, city,suburb.
 
 
+# Route to get all parks, with optional filters for state, city, and suburb
 @park_bp.route('/')
 def get_all_parks():
+    # Get state filter from query parameters
     state_name = request.args.get('state')
+    # Get city filter from query parameters
     city_name = request.args.get('city')
+    # Get suburb filter from query parameters
     suburb_name = request.args.get('suburb')
 
+    # Start building the SQL statement to fetch parks
     stmt = db.select(Park).join(Address, Park.address_id == Address.id).join(
         Suburb, Address.suburb_id == Suburb.id)
 
+    # If a state filter is provided, join with City and State tables and add where clause
     if state_name:
         state_name = state_name.lower()
         stmt = stmt.join(City, Suburb.city_id == City.id)\
             .join(State, City.state_id == State.id)\
             .where(func.lower(State.state_name) == state_name)
 
+    # If a city filter is provided, join with City table and add where clause
     if city_name:
         city_name = city_name.lower()
         stmt = stmt.join(City, Suburb.city_id == City.id)\
             .where(func.lower(City.city_name) == city_name)
 
+    # If a suburb filter is provided, add where clause
     if suburb_name:
         suburb_name = suburb_name.lower()
         stmt = stmt.where(func.lower(Suburb.suburb_name) == suburb_name)
 
+    # Execute the SQL statement and fetch all results
     parks = db.session.execute(stmt).scalars().fetchall()
 
+    # If no parks are found, return an error message
     if not parks:
         return {'error': 'No parks found with the provided filters'}, 404
 
+    # Return the serialized parks
     return parks_schema.dump(parks)
+
+# Route to search for parks by name
 
 
 @park_bp.route('/search')
 def search_parks():
+    # Get search term from query parameters and convert to lowercase
     search_term = request.args.get('name').lower()
+
+    # Build the SQL statement to find parks whose names contain the search term
     stmt = db.select(Park).where(func.lower(
         Park.park_name).contains(search_term))
+
+    # Execute the SQL statement and fetch all results
     parks = db.session.execute(stmt).scalars().fetchall()
 
+    # If no parks are found, return an error message
     if not parks:
         return {'error': 'No parks found with the provided filters'}, 404
 
+    # Return the serialized parks
     return parks_schema.dump(parks)
+
+# Route to get all reviews for a specific park
 
 
 @park_bp.route('/<int:id>/reviews')
 def get_park_reviews(id):
+    # Build the SQL statement to find reviews for the given park ID
     stmt = db.select(Review).where(Review.park_id == id)
+
+    # Execute the SQL statement and fetch all results
     reviews = db.session.execute(stmt).scalars().all()
 
+    # If no reviews are found, return an error message
     if not reviews:
         return {'error': 'No reviews found for this park'}, 404
 
+    # Return the serialized reviews
     return reviews_schema.dump(reviews)
 
 
@@ -112,7 +139,8 @@ def add_park():
     body_data = request.get_json()  # Get the JSON data from the request
     # Check if park with provided name already exists
     park_name = body_data.get('park_name')
-    existing_park = Park.query.filter_by(park_name=park_name).first()
+    stmt = db.select(Park).where(Park.park_name == park_name)
+    existing_park = db.session.execute(stmt).scalars().first()
     if existing_park:
         return {'error': f'Park with name {park_name} already exists'}, 400
 
@@ -128,6 +156,7 @@ def add_park():
     db.session.commit()  # Save the changes
 
     return {'message': f'Park {new_park.park_name} created successfully'}, 201
+
 
 # Define a route to delete a park
 

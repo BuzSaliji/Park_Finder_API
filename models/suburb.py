@@ -28,7 +28,7 @@ class SuburbSchema(ma.Schema):
     @validates('suburb_name')  # Validation for the suburb_name field
     def validate_suburb_name(self, value):
         # Raise a validation error if the suburb name is not alphabetic
-        if not value.isalpha():
+        if not value.replace(" ", "").isalpha():
             raise ValidationError(
                 'Suburb name should only contain alphabetic characters')
 

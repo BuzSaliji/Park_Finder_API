@@ -17,19 +17,17 @@ class State(db.Model):
 
 
 class StateSchema(ma.Schema):
-    cities = fields.Nested('CitySchema', many=True, exclude=[
-                           'state'])  # Nested City schema
 
     @validates('state_name')  # Validation for the state_name field
     def validate_state_name(self, value):
         # Raise a validation error if the state name is not alphabetic
-        if not value.isalpha():
+        if not value.replace(" ", "").isalpha:
             raise ValidationError(
-                'State name should only contain alphabetic characters')
+                'State name should only contain alphabetic characters and spaces')
 
     class Meta:
         # Fields to include in the serialised output
-        fields = ('id', 'state_name', 'cities')
+        fields = ('id', 'state_name')
         ordered = True  # Order the fields in the output
 
 

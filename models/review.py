@@ -1,6 +1,8 @@
-from marshmallow import fields
-from sqlalchemy import CheckConstraint
 from init import db, ma
+from marshmallow import validates, ValidationError, fields
+from marshmallow.validate import Range, Length
+from sqlalchemy import CheckConstraint
+
 
 # Define the Review model
 
@@ -29,6 +31,22 @@ class Review(db.Model):
 
 
 class ReviewSchema(ma.Schema):
+
+    comment = fields.String(validate=Length(max=250))  # Comment of the review
+    rating = fields.Integer(validate=Range(
+        min=1, max=10))  # Rating of the review
+
+    user = fields.Nested('UserSchema', only=['name'])
+    park = fields.Nested('ParkSchema', only=['park_name'])
+
+    def validate_comment(self, value):
+        if not isinstance(value, str):
+            raise ValidationError("Comment must be a string")
+        if len(value.strip()) == 0:
+            raise ValidationError("Comment must not be empty")
+
+    ...
+
     class Meta:
         # Fields to include in the serialised output
         fields = ('comment', 'rating', 'park_id', 'user_id')
