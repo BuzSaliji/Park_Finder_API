@@ -85,3 +85,26 @@ def delete_suburb(id):
         return {'message': f'suburb {suburb.suburb_name} deleted successfully'}, 200
     else:
         return {'error': f'suburb not found with id {id}'}, 404
+# Define a route to update a suburb
+
+
+@suburb_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
+@jwt_required()
+@authorise_as_admin
+def update_one_suburb(id):
+    # Get the JSON data from the request and deserialize it
+    body_data = suburb_schema.load(request.get_json(), partial=True)
+    # Find the suburb in the database
+    stmt = db.select(Suburb).filter_by(id=id)
+    suburb = db.session.scalar(stmt)  # Fetch the first result
+    # Check if the suburb was found and either update it or return as an error message
+    if suburb:
+        suburb.suburb_name = body_data.get('suburb_name') or suburb.suburb_name
+        db.session.commit()  # Save the changes
+        # Convert the suburb to JSON ands return it
+        return {
+            'message': 'Suburb updated successfully',
+            'suburb': suburb_schema.dump(suburb)
+        }, 200
+    else:
+        return {'error': f'Suburb not found with id {id}'}, 404

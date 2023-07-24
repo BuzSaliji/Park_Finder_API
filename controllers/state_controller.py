@@ -99,6 +99,9 @@ def update_one_state(id):
             'state_name') or state.state_name  # Update the state's name
         db.session.commit()  # Save the changes
         # Convert the updated state to JSON and return it
-        return state_schema.dump(state)
+        return {
+            'message': 'State updated successfully',
+            'state': state_schema.dump(state)
+        }, 200
     else:
         return {'error': f'State not found with id {id}'}, 404

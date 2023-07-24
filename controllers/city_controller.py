@@ -44,7 +44,11 @@ def get_city(id):
     city = db.session.scalar(stmt)  # Fetch the first result
     # Check if the city was found and either return it or return an error message
     if city:
-        return city_schema.dump(city)  # Convert the city to JSON and return it
+        return {
+            'message': 'City updated successfully',
+            # Convert the city to JSON and return it
+            'city': city_schema.dump(city)
+        }, 200
     else:
         return {'error': f'City not found with id {id}'}, 404
 

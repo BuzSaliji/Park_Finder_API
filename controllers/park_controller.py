@@ -127,7 +127,7 @@ def delete_park(id):
 @jwt_required()  # Require a valid JWT token
 @authorise_as_admin  # Require the user to be an admin
 def update_one_park(id):
-    # Get the JSON data from the request and deserialize it
+    # Get the JSON data from the request and deserialise it
     body_data = park_schema.load(request.get_json(), partial=True)
     stmt = db.select(Park).filter_by(id=id)  # Find the park in the database
     park = db.session.scalar(stmt)  # Fetch the first result
@@ -136,6 +136,10 @@ def update_one_park(id):
         park.park_name = body_data.get('park_name') or park.park_name
         park.description = body_data.get('description') or park.description
         db.session.commit()  # Save the changes
-        return park_schema.dump(park)  # Convert the park to JSON and return it
+        return {
+            'message': 'Park updated successfully',
+            # Convert the park to JSON and return it
+            'park': park_schema.dump(park)
+        }, 200
     else:
         return {'error': f'Park not found with id {id}'}, 404

@@ -48,6 +48,7 @@ def seed_db():
         State(state_name='Western Australia'),
         State(state_name='South Australia'),
         State(state_name='ACT'),
+        State(state_name='Tasmania'),
     ]
 
     db.session.add_all(states)
@@ -67,6 +68,10 @@ def seed_db():
             state_name='South Australia').first().id),
         City(city_name='Canberra', state_id=State.query.filter_by(
             state_name='ACT').first().id),
+        City(city_name='Hobart', state_id=State.query.filter_by(
+            state_name='Tasmania').first().id),
+        City(city_name='Wollongong', state_id=State.query.filter_by(
+            state_name='New South Wales').first().id),
     ]
 
     db.session.add_all(cities)
@@ -86,6 +91,10 @@ def seed_db():
             city_name='Adelaide').first().id),
         Suburb(suburb_name='Molonglo Valley', city_id=City.query.filter_by(
             city_name='Canberra').first().id),
+        Suburb(suburb_name='Battery Point', city_id=City.query.filter_by(
+            city_name='Hobart').first().id),
+        Suburb(suburb_name='Fairy Meadow', city_id=City.query.filter_by(
+            city_name='Wollongong').first().id),
     ]
 
     db.session.add_all(suburbs)
@@ -104,14 +113,22 @@ def seed_db():
             suburb_name='St Kilda').first().id, user_id=User.query.filter_by(username='admin').first().id),
         Park(park_name='Pod Playground at the National Arboretum', description='The Pod Playground is a creative and nature-themed play space located within the National Arboretum in the Molonglo Valley, Canberra. The park features giant acorn-shaped climbing frames, slides, and swings. Kids can also explore the nearby forests and enjoy the beautiful views of the city. The Pod Playground offers a unique blend of play and nature appreciation.', address='Forest Dr', suburb_id=Suburb.query.filter_by(
             suburb_name='Molonglo Valley').first().id, user_id=User.query.filter_by(username='admin').first().id),
+        Park(park_name='Battery Point Sculpture Trail', description='A walkable trail with various sculptures located in the historic suburb of Battery Point, Hobart. It offers a unique blend of art and history.',
+             address='Salamanca Pl', suburb_id=Suburb.query.filter_by(suburb_name='Battery Point').first().id, user_id=User.query.filter_by(username='admin').first().id),
+        Park(park_name='Fairy Meadow Beach Park', description='A beautiful beach park located in the suburb of Fairy Meadow, Wollongong. It offers a great place for a family picnic with playgrounds, BBQ areas, and clean sandy beach.', address='Ellen St', suburb_id=Suburb.query.filter_by(
+            suburb_name='Fairy Meadow').first().id, user_id=User.query.filter_by(username='admin').first().id),
     ]
 
     db.session.add_all(parks)
     db.session.commit()
 
     reviews = [
-        Review(user_id=1, park_id=1, rating=8, comment='Great park'),
-        Review(user_id=1, park_id=2, rating=8, comment='Great park'),
+        Review(user_id=1, park_id=1, rating=6, comment='Nice park'),
+        Review(user_id=1, park_id=2, rating=6, comment='Nice park'),
+        Review(user_id=1, park_id=3, rating=9,
+               comment='Wonderful sculpture trail in a beautiful suburb.'),
+        Review(user_id=1, park_id=8, rating=10,
+               comment='Amazing beach park with a lot of amenities. A must visit in Wollongong.'),
     ]
 
     db.session.add_all(reviews)
