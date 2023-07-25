@@ -1,6 +1,7 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.suburb import Suburb, suburb_schema, suburbs_schema
+from models.address import Address, address_schema, addresses_schema
 from models.user import User
 from init import db
 import functools
@@ -25,7 +26,7 @@ def authorise_as_admin(fn):
             return {'error': 'Not authorised to perform delete'}, 403
     return wrapper
 
-# Define a route to get all suburbs
+# Route to get all suburbs
 
 
 @suburb_bp.route('/')
@@ -35,7 +36,7 @@ def get_all_suburbs():
     # Convert the results to JSON and return them
     return suburbs_schema.dump(suburbs)
 
-# Define a route to get a single suburb by its ID
+# Route to get a single suburb by its ID
 
 
 @suburb_bp.route('/<int:id>')
@@ -50,24 +51,38 @@ def get_suburb(id):
     else:
         return {'error': f'suburb not found with id {id}'}, 404
 
-# Define a route to add a new suburb
+
+@suburb_bp.route('/<int:suburb_id>/addresses')
+def get_addresses_in_suburb(suburb_id):
+    # Find the suburb in the database
+    stmt = db.select(Suburb).filter_by(id=suburb_id)
+    suburb = db.session.scalar(stmt)
+
+    # If the suburb was found, return the addresses in the suburb
+    if suburb:
+        addresses = suburb.addresses
+        return addresses_schema.dump(addresses)
+    else:
+        return {'error': f'Suburb not found with id {suburb_id}'}, 404
+
+# Route to add a new suburb
 
 
 @suburb_bp.route('/', methods=['POST'])
 @jwt_required()  # Require a valid JWT token
-@authorise_as_admin  # Require the user to be an admin
 def add_suburb():
     body_data = request.get_json()  # Get the JSON data from the request
     new_suburb = Suburb(  # Create a new suburb with the data
-        suburb_name=body_data.get('suburb'),
+        suburb_name=body_data.get('suburb_name'),
         city_id=body_data.get('city_id')
     )
     db.session.add(new_suburb)  # Add the new suburb to the database
     db.session.commit()  # Save the changes
-    # Convert the new suburb to JSON and return it
-    return suburb_schema.dump(new_suburb), 201
+    # Return a success message
+    return {'message': f'Suburb {new_suburb.suburb_name} was successfully created'}, 201
 
-# Define a route to delete a suburb
+
+# Route to delete a suburb
 
 
 @suburb_bp.route('/<int:id>', methods=['DELETE'])
@@ -85,14 +100,14 @@ def delete_suburb(id):
         return {'message': f'suburb {suburb.suburb_name} deleted successfully'}, 200
     else:
         return {'error': f'suburb not found with id {id}'}, 404
-# Define a route to update a suburb
+# Route to update a suburb
 
 
 @suburb_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
 @jwt_required()
 @authorise_as_admin
 def update_one_suburb(id):
-    # Get the JSON data from the request and deserialize it
+    # Get the JSON data from the request
     body_data = suburb_schema.load(request.get_json(), partial=True)
     # Find the suburb in the database
     stmt = db.select(Suburb).filter_by(id=id)

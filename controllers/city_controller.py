@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.city import City, city_schema, cities_schema
+from models.suburb import Suburb, suburb_schema, suburbs_schema
 from models.user import User
 from init import db
 import functools
@@ -25,7 +26,7 @@ def authorise_as_admin(fn):
             return {'error': 'Not authorised to perform delete'}, 403
     return wrapper
 
-# Define a route to get all cities
+# Route to get all cities
 
 
 @city_bp.route('/')
@@ -35,7 +36,7 @@ def get_all_city():
     # Convert the results to JSON and return them
     return cities_schema.dump(cities)
 
-# Define a route to get a single city by its ID
+# Route to get a single city by its ID
 
 
 @city_bp.route('/<int:id>')
@@ -44,15 +45,27 @@ def get_city(id):
     city = db.session.scalar(stmt)  # Fetch the first result
     # Check if the city was found and either return it or return an error message
     if city:
-        return {
-            'message': 'City updated successfully',
-            # Convert the city to JSON and return it
-            'city': city_schema.dump(city)
-        }, 200
+        return city_schema.dump(city)
     else:
         return {'error': f'City not found with id {id}'}, 404
 
-# Define a route to add a new city
+# Route to find subrubs in a city
+
+
+@city_bp.route('/<int:city_id>/suburbs')
+def get_suburbs_in_city(city_id):
+    # Find city in the database
+    stmt = db.select(City).filter_by(id=city_id)
+    city = db.session.scalar(stmt)
+
+    # If the city was found, return the suburbs in the city
+    if city:
+        suburbs = city.suburbs
+        return suburbs_schema.dump(suburbs)
+    else:
+        return {'error': f'City not found with id {city_id}'}, 404
+
+# Route to add a new city
 
 
 @city_bp.route('/', methods=['POST'])
@@ -67,9 +80,10 @@ def add_city():
     db.session.add(city)  # Add the new city to the database
     db.session.commit()  # Save the changes
     # Convert the new city to JSON and return it
-    return city_schema.dump(city), 201
+    return {'message': f'City {city.city_name} was successfully created'}, 201
 
-# Define a route to delete a city
+
+# Route to delete a city
 
 
 @city_bp.route('/<int:id>', methods=['DELETE'])
@@ -86,7 +100,7 @@ def delete_city(id):
     else:
         return {'error': f'City not found with id {id}'}, 404
 
-# Define a route to update a city
+# Route to update a city
 
 
 @city_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
@@ -103,6 +117,6 @@ def update_one_city(id):
             'city_name') or city.city_name  # Update the city's name
         db.session.commit()  # Save the changes
         # Convert the updated city to JSON and return it
-        return city_schema.dump(city)
+        return {'message': 'City updated successfully', 'city': city_schema.dump(city)}, 200
     else:
         return {'error': f'City not found with id {id}'}, 404

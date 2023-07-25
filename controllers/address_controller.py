@@ -26,7 +26,7 @@ def authorise_as_admin(fn):
             return {'error': 'Not authorised to perform delete'}, 403
     return wrapper
 
-# Define a route to get all addresses
+# Route to get all addresses
 
 
 @address_bp.route('/')
@@ -36,7 +36,7 @@ def get_all_addresses():
     # Convert the results to JSON and return them
     return addresses_schema.dump(addresses)
 
-# Define a route to get a single address by ID
+# Route to get a single address by ID
 
 
 @address_bp.route('/<int:id>')
@@ -50,24 +50,25 @@ def get_address(id):
     else:
         return {'error': f'state not found with id {id}'}, 404
 
-# Define a route to add a new address
+# Route to add a new address
 
 
 @address_bp.route('/', methods=['POST'])
 @jwt_required()  # Require a valid JWT token
 def add_address():
-    body_data = request.get_json()  # Get the JSON data from the request
+    body_data = request.get_json()  # Get the JSON data from the request)
     address = Address(  # Create a mew address with the data
         street_number=body_data.get('street_number'),
         street_name=body_data.get('street_name'),
-        postcode=body_data.get('postcode')
+        postcode=body_data.get('postcode'),
+        suburb_id=body_data.get('suburb_id')
     )
     db.session.add(address)  # Add the new address to the database
     db.session.commit()  # Save the changes
     # Convert the new address to JSON and return it
     return address_schema.dump(address), 201
 
-# Define a route to delete an address
+# Route to delete an address
 
 
 @address_bp.route('/<int:id>', methods=['DELETE'])
@@ -81,11 +82,12 @@ def delete_address(id):
     if address:
         db.session.delete(address)
         db.session.commit()
-        return {'message': f'Address {address.address_id} deleted successfully'}, 200
+        return {'message': f'Address {address.id} deleted successfully'}, 200
     else:
         return {'error': f'Address not found with id {id}'}, 404
 
-# Define a route to update an address
+
+# Route to update an address
 
 
 @address_bp.route('/<int:id>', methods=['PUT', 'PATCH'])

@@ -2,8 +2,8 @@ from models.review import Review
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.review import Review, review_schema, reviews_schema
-from models.user import User
-from models.park import Park
+from models.user import User, user_schema, users_schema
+from models.park import Park, park_schema, parks_schema
 from init import db
 from sqlalchemy import and_
 import functools
@@ -12,7 +12,7 @@ import functools
 review_bp = Blueprint('review_bp', __name__, url_prefix='/review')
 
 
-# Define a route to get all reviews with optional filtering
+# Route to get all reviews with optional filtering
 
 
 @review_bp.route('/')
@@ -39,7 +39,39 @@ def get_all_reviews():
     # Return the serialized results
     return reviews_schema.dump(reviews)
 
-# Define a route to get a single review by a user for a park
+# Route to get reviews by a user
+
+
+@review_bp.route('/user/<int:user_id>')
+def get_review_by_user(user_id):
+    # Fin the user in the database
+    stmt = db.select(User).filter_by(id=user_id)
+    user = db.session.scalar(stmt)
+
+    # If the user was found, return the reviews by the user
+    if user:
+        reviews = user.reviews
+        return reviews_schema.dump(reviews)
+    else:
+        return {'error': f'User not found with the id {user_id}'}, 404
+
+# Route to get all reviews for a specific park
+
+
+@review_bp.route('/park/<int:park_id>')
+def get_review_by_park(park_id):
+    # Find the park in the database
+    stmt = db.select(Park).filter_by(id=park_id)
+    park = db.session.scalar(stmt)
+
+    # If the park was found, retrurn the reviews for the park
+    if park:
+        reviews = park.reviews
+        return reviews_schema.dump(reviews)
+    else:
+        return {'error': f'Park not found with id {park_id}'}, 404
+
+# Route to get a single review by a user for a park
 
 
 @review_bp.route('/<int:user_id>/<int:park_id>')
@@ -57,10 +89,8 @@ def get_review(user_id, park_id):
     else:
         return {'error': f'Review not found for user_id {user_id} and park_id {park_id}'}, 404
 
-# Define a route to add a new review
 
-
-# Define a route to add a new review
+# Route to add a new review
 @review_bp.route('/', methods=['POST'])
 @jwt_required()  # Requires a valid access token in the request header
 def add_review():
@@ -102,7 +132,7 @@ def add_review():
     # Return a success message
     return {'message': f'review {new_review} created successfully'}, 201
 
-# Define a route to delete a review
+# Route to delete a review
 
 
 @review_bp.route("/<int:user_id>/<int:park_id>", methods=["DELETE"])
@@ -135,7 +165,7 @@ def delete_review(user_id, park_id):
         return {'error': 'Review not found'}, 404
 
 
-# Define a route to update a review
+# Route to update a review
 @review_bp.route('/<int:user_id>/<int:park_id>', methods=['PUT', 'PATCH'])
 @jwt_required()  # Requires a valid access token in the request header
 def update_one_review(user_id, park_id):

@@ -30,8 +30,9 @@ class Park(db.Model):
 class ParkSchema(ma.Schema):
 
     # Nested User schema
-    user = fields.Nested('UserSchema', only=['name'])
-    address = fields.Nested('AddressSchema', only=['street_name', 'postcode'])
+    user = fields.Nested('UserSchema', exclude=['user'])
+    address = fields.Nested('AddressSchema', only=[
+                            'street_number', 'street_name', 'postcode'])
 
     @validates('park_name')
     def validate_park_name(self, value):
@@ -41,7 +42,8 @@ class ParkSchema(ma.Schema):
 
     class Meta:
         # Fields to include in the serialised output
-        fields = ('id', 'park_name',  'description', 'user', 'address')
+        fields = ('id', 'park_name',  'description',
+                  'user_id', 'address_id', 'address',)
         ordered = True  # Order the fields in the output
 
 

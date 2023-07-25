@@ -24,7 +24,7 @@ class Address(db.Model):
     park = db.relationship('Park', back_populates='address', uselist=False)
 
 
-# Define the schema for the Address model for serialization/deserialization
+# Define the schema for the Address model for serialisation
 class AddressSchema(ma.Schema):
     street_number = fields.Integer(required=True, validate=Range(
         min=1, error="Street number must be at least 1"))
@@ -38,8 +38,8 @@ class AddressSchema(ma.Schema):
 
     class Meta:
         fields = ('id', 'street_number', 'street_name',
-                  'postcode', 'suburb')  # Fields to be included in the serialized data
-        ordered = True  # Order the fields in the serialized data
+                  'postcode', 'suburb_id', 'suburb')  # Fields to be included in the serialised data
+        ordered = True  # Order the fields in the serialised data
 
     # Define a custom validation for the street_name field
     @validates('street_name')

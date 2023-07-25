@@ -1,6 +1,7 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.state import State, state_schema, states_schema
+from models.city import City, city_schema, cities_schema
 from models.user import User
 from init import db
 import functools
@@ -25,7 +26,7 @@ def authorise_as_admin(fn):
             return {'error': 'Not authorised to perform delete'}, 403
     return wrapper
 
-# Define a route to get all states
+# Route to get all states
 
 
 @state_bp.route('/')
@@ -35,7 +36,7 @@ def get_all_states():
     # Convert the results to JSON and return them
     return states_schema.dump(states)
 
-# Define a route to get a single state by its ID
+# Route to get a single state by its ID
 
 
 @state_bp.route('/<int:id>')
@@ -49,7 +50,24 @@ def get_state(id):
     else:
         return {'error': f'State not found with id {id}'}, 404
 
-# Define a route to add a new state
+
+# Route to find cities in a state
+
+@state_bp.route('/<int:state_id>/cities')
+def get_cities_in_state(state_id):
+    # Find the state in the database
+    stmt = db.select(State).filter_by(id=state_id)
+    state = db.session.scalar(stmt)
+
+    # If the state was found, return the cities in the state
+    if state:
+        cities = state.cities
+        return cities_schema.dump(cities)
+    else:
+        return {'error': f'State not found with id {state_id}'}, 404
+
+
+# Route to add a new state
 
 
 @state_bp.route('/', methods=['POST'])
@@ -63,9 +81,9 @@ def add_state():
     db.session.add(state)  # Add the new state to the database
     db.session.commit()  # Save the changes
     # Convert the new state to JSON and return it
-    return state_schema.dump(state), 201
+    return {'message': f'State {state.state_name} was successfully created'}, 201
 
-# Define a route to delete a state
+# Route to delete a state
 
 
 @state_bp.route('/<int:id>', methods=['DELETE'])
@@ -82,7 +100,7 @@ def delete_state(id):
     else:
         return {'error': f'State not found with id {id}'}, 404
 
-# Define a route to update a state
+# Route to update a state
 
 
 @state_bp.route('/<int:id>', methods=['PUT', 'PATCH'])

@@ -31,8 +31,6 @@ def authorise_as_admin(fn):
             return {'error': 'Not authorised to perform delete'}, 403
     return wrapper
 
-# Define a route to get all parks with optional filtering by state, city,suburb.
-
 
 # Route to get all parks, with optional filters for state, city, and suburb
 @park_bp.route('/')
@@ -82,21 +80,22 @@ def get_all_parks():
 @park_bp.route('/search')
 def search_parks():
     # Get search term from query parameters and convert to lowercase
-    search_term = request.args.get('name').lower()
+    search_term = request.args.get('search', '').lower()
 
     # Build the SQL statement to find parks whose names contain the search term
     stmt = db.select(Park).where(func.lower(
         Park.park_name).contains(search_term))
 
     # Execute the SQL statement and fetch all results
-    parks = db.session.execute(stmt).scalars().fetchall()
+    parks = db.session.execute(stmt).scalars().all()
 
     # If no parks are found, return an error message
     if not parks:
-        return {'error': 'No parks found with the provided filters'}, 404
+        return {'error': 'No parks found with the provided search term'}, 404
 
     # Return the serialized parks
     return parks_schema.dump(parks)
+
 
 # Route to get all reviews for a specific park
 
@@ -117,7 +116,7 @@ def get_park_reviews(id):
     return reviews_schema.dump(reviews)
 
 
-# Define a route to get a single park by its ID
+# Route to get a single park by its ID
 
 
 @park_bp.route('/<int:id>', methods=['GET'])
@@ -130,7 +129,7 @@ def get_park(id):
     else:
         return {'error': f'park not found with id {id}'}, 404
 
-# Define a route to add a new park
+# Route to add a new park
 
 
 @park_bp.route('/', methods=['POST'])
@@ -158,7 +157,7 @@ def add_park():
     return {'message': f'Park {new_park.park_name} created successfully'}, 201
 
 
-# Define a route to delete a park
+# Route to delete a park
 
 
 @park_bp.route('/<int:id>', methods=['DELETE'])
@@ -176,14 +175,14 @@ def delete_park(id):
     else:
         return {'error': f'park not found with id {id}'}, 404
 
-# Define a route to update a park
+# Route to update a park
 
 
 @park_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
 @jwt_required()  # Require a valid JWT token
 @authorise_as_admin  # Require the user to be an admin
 def update_one_park(id):
-    # Get the JSON data from the request and deserialise it
+    # Get the JSON data from the request
     body_data = park_schema.load(request.get_json(), partial=True)
     stmt = db.select(Park).filter_by(id=id)  # Find the park in the database
     park = db.session.scalar(stmt)  # Fetch the first result
