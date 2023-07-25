@@ -109,7 +109,7 @@ def update_one_address(id):
             'postcode') or address.postcode  # Update address postcode
 
         db.session.commit()  # Save the changes
-        # Conver the updated address to JSON and return it
+        # Convert the updated address to JSON and return it
         return {
             'message': 'Address updated successfully',
             'address': address_schema.dump(address)

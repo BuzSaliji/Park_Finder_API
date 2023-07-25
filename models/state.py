@@ -8,7 +8,8 @@ class State(db.Model):
     __tablename__ = 'state'
 
     id = db.Column(db.Integer, primary_key=True)  # Primary key
-    state_name = db.Column(db.String(50), nullable=False)  # Name of the state
+    state_name = db.Column(db.String(50), unique=True,
+                           nullable=False)  # Name of the state
 
     # Relationship to the City model
     cities = db.relationship('City', back_populates='state')

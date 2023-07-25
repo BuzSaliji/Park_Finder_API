@@ -1,5 +1,7 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy.exc import IntegrityError
+from psycopg2 import errorcodes
 from models.state import State, state_schema, states_schema
 from models.city import City, city_schema, cities_schema
 from models.user import User
@@ -74,14 +76,22 @@ def get_cities_in_state(state_id):
 @jwt_required()  # Require a valid JWT token
 @authorise_as_admin  # Require the user to be an admin
 def add_state():
-    body_data = request.get_json()  # Get the JSON data from the request
-    state = State(  # Create a new state with the data
-        state_name=body_data.get('state_name')
-    )
-    db.session.add(state)  # Add the new state to the database
-    db.session.commit()  # Save the changes
-    # Convert the new state to JSON and return it
-    return {'message': f'State {state.state_name} was successfully created'}, 201
+    try:
+        body_data = request.get_json()  # Get the JSON data from the request
+        state = State(  # Create a new state with the data
+            state_name=body_data.get('state_name')
+        )
+        db.session.add(state)  # Add the new state to the database
+        db.session.commit()  # Save the changes
+        # Convert the new state to JSON and return it
+        return {'message': f'State {state.state_name} was successfully created'}, 201
+    except IntegrityError as err:
+        db.session.rollback()
+        if err.orig.pgcode == errorcodes.UNIQUE_VIOLATION:
+            return {'error': 'State name already in use'}, 400
+        if err.orig.pgcode == errorcodes.NOT_NULL_VIOLATION:
+            return {'error': f'The {err.orig.diag.column_name} field is required'}, 409
+
 
 # Route to delete a state
 

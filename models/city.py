@@ -8,7 +8,8 @@ class City(db.Model):
     __tablename__ = "city"
 
     id = db.Column(db.Integer, primary_key=True)  # Primary key
-    city_name = db.Column(db.String(50), nullable=False)  # Name of the city
+    city_name = db.Column(db.String(50), unique=True,
+                          nullable=False)  # Name of the city
 
     state_id = db.Column(db.Integer, db.ForeignKey(
         'state.id'), nullable=False)  # Foreign key to the State table

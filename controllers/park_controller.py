@@ -74,6 +74,54 @@ def get_all_parks():
     # Return the serialized parks
     return parks_schema.dump(parks)
 
+# Route to find parks in a state
+
+
+@park_bp.route('/state/<int:state_id>')
+def get_park_in_state(state_id):
+    # Join Park, Address, Suburb, City, and State tables
+    stmt = db.select(Park).join(Address).join(Suburb).join(City).join(State)\
+        .where(State.id == state_id)
+    parks = db.session.scalars(stmt).all()
+
+    # if state was found, returnthe parks in state
+    if parks:
+        return parks_schema.dump(parks)
+    else:
+        return {'error': f'State not found with id {state_id}'}, 404
+
+# Route to find parks in a city
+
+
+@park_bp.route('/city/<int:city_id>')
+def get_parks_in_city(city_id):
+    # Join Park, Address, Suburb, and City tables
+    stmt = db.select(Park).join(Address).join(Suburb).join(City)\
+        .where(City.id == city_id)
+    parks = db.session.scalars(stmt).all()
+
+    # If city was found, return the parks in city
+    if parks:
+        return parks_schema.dump(parks)
+    else:
+        return {'error': f'City not found with id {city_id}'}, 404
+
+# Route to find parks in a suburb
+
+
+@park_bp.route('/suburb/<int:suburb_id>')
+def get_parks_in_suburb(suburb_id):
+    # Join Park, Address, and Suburb tables
+    stmt = db.select(Park).join(Address).join(Suburb)\
+        .where(Suburb.id == suburb_id)
+    parks = db.session.scalars(stmt).all()
+
+    # If suburb was found, return the parks in suburb
+    if parks:
+        return parks_schema.dump(parks)
+    else:
+        return {'error': f'Suburb not found with id {suburb_id}'}, 404
+
 # Route to search for parks by name
 
 
@@ -119,7 +167,7 @@ def get_park_reviews(id):
 # Route to get a single park by its ID
 
 
-@park_bp.route('/<int:id>', methods=['GET'])
+@park_bp.route('/<int:id>')
 def get_park(id):
     stmt = db.select(Park).filter_by(id=id)  # Find the park in the database
     park = db.session.scalar(stmt)  # Fetch the first result

@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy.exc import IntegrityError
+from psycopg2 import errorcodes
 from models.city import City, city_schema, cities_schema
 from models.suburb import Suburb, suburb_schema, suburbs_schema
 from models.user import User
@@ -72,20 +74,25 @@ def get_suburbs_in_city(city_id):
 @jwt_required()  # Require a valid JWT token
 @authorise_as_admin  # Require the user to be an admin
 def add_city():
-    body_data = request.get_json()  # Get the JSON data from the request
-    city = City(  # Create a new city with the data
-        city_name=body_data.get('city_name'),
-        state_id=body_data.get('state_id')
-    )
-    db.session.add(city)  # Add the new city to the database
-    db.session.commit()  # Save the changes
-    # Convert the new city to JSON and return it
-    return {'message': f'City {city.city_name} was successfully created'}, 201
+    try:
+        body_data = request.get_json()  # Get the JSON data from the request
+        city = City(  # Create a new city with the data
+            city_name=body_data.get('city_name'),
+            state_id=body_data.get('state_id')
+        )
+        db.session.add(city)  # Add the new city to the database
+        db.session.commit()  # Save the changes
+        # Convert the new city to JSON and return it
+        return {'message': f'City {city.city_name} was successfully created'}, 201
+    except IntegrityError as err:
+        db.session.rollback()
+        if err.orig.pgcode == errorcodes.UNIQUE_VIOLATION:
+            return {'error': 'City name already in use'}, 400
+        if err.orig.pgcode == errorcodes.NOT_NULL_VIOLATION:
+            return {'error': f'The {err.orig.diag.column_name} field is required'}, 409
 
 
 # Route to delete a city
-
-
 @city_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()  # Require a valid JWT token
 @authorise_as_admin  # Require the user to be an admin
